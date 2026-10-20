@@ -89,12 +89,38 @@ with tempfile.TemporaryDirectory() as temp:
     (panel / 'brightness').write_text('180')
     (panel / 'max_brightness').write_text('255')
     screen = Backlight(root, 16)
-    with patch('monitor.subprocess.run') as power:
+    with patch.object(Backlight, 'power') as power:
         screen.enter(); screen.toggle()
         assert screen.asleep and (panel / 'brightness').read_text() == '0'
         screen.toggle(); screen.restore()
         assert not screen.asleep and (panel / 'brightness').read_text() == '180'
-        power.assert_not_called()
+        assert [call.args[0] for call in power.call_args_list] == ['off', 'on']
+    screen = Backlight(root, 16)
+    with patch.object(Backlight, 'power', side_effect=[None, OSError('wake failed'), None]):
+        screen.enter(); screen.toggle()
+        try:
+            screen.toggle()
+        except OSError:
+            pass
+        else:
+            raise AssertionError('Failed display wake must remain retryable')
+        assert screen.asleep and (panel / 'brightness').read_text() == '0'
+        screen.restore()
+        assert (panel / 'brightness').read_text() == '180'
+    screen = Backlight(root, 16)
+    with patch.object(Backlight, 'power', side_effect=[OSError('off failed'), None]) as power:
+        screen.enter()
+        try:
+            screen.toggle()
+        except OSError:
+            pass
+        else:
+            raise AssertionError('Failed display power command was ignored')
+        assert screen.asleep and screen.dpms_off
+        screen.toggle()
+        assert not screen.asleep and (panel / 'brightness').read_text() == '16'
+        screen.restore()
+        assert [call.args[0] for call in power.call_args_list] == ['off', 'on']
     thermal = root / 'thermal/thermal_zone0'
     thermal.mkdir(parents=True)
     (thermal / 'type').write_text('cpul_thermal_zone')

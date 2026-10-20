@@ -205,7 +205,7 @@ function render(s){
  document.getElementById('charge-icon').innerHTML=charging?'<svg viewBox="0 0 16 20" role="img" aria-label="Charging"><path d="M9 0 1 11h6l-1 9 9-12H9z" fill="currentColor"/></svg>':plugged?'<svg viewBox="0 0 20 20" role="img" aria-label="'+label+'"><path d="M6 1v5m8-5v5M4 6h12v3a6 6 0 0 1-12 0zM10 15v4" fill="none" stroke="currentColor" stroke-width="2"/></svg>':'';
 
  document.getElementById('screen-button').textContent=screenKey+(s.screen_off?' Wake':' Screen off');
- document.getElementById('screen-button').setAttribute('aria-label',device.name==='TrimUI'?'Toggle backlight; press Y to wake':'Turn screen off; press FN to wake');
+ document.getElementById('screen-button').setAttribute('aria-label',device.name==='TrimUI'?'Turn screen off; press Y to wake':'Turn screen off; press FN to wake');
  document.body.classList.toggle('device-summary',Boolean(s.detail&&!s.focus));
  document.getElementById('connection').textContent=s.connection;
  document.getElementById('connection').className=s.connection==='Connected'?'':'error';

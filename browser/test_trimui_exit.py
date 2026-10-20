@@ -43,6 +43,7 @@ def main():
         raise AssertionError('Exit did not restore menu and release browser/mounts within 15 seconds')
     assert not Path('/mnt/UDISK/hwmonitor/runtime/rootfs/.mount-lock').exists()
     assert int(Path('/sys/class/backlight/backlight0/brightness').read_text()) == args.expected_brightness
+    assert Path('/sys/class/drm/card0-DSI-1/dpms').read_text().strip() == 'On'
     print(f'PASS: Select+Start, menu/backlight restored, no browser/mounts/lock ({time.monotonic()-started:.2f}s)')
 
 

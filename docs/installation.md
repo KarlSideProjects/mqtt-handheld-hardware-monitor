@@ -79,7 +79,7 @@ TrimUI 的 [install-trimui-deps.sh](../browser/install-trimui-deps.sh) 使用 [D
 
 私有 rootfs 提供 Chromium 所需的 glibc，不替換 Buildroot 的 libc。Chromium 以 UID 65534 在 headless 模式渲染同一份網頁，保留套件 sandbox。[trimui_browser.py](../browser/trimui_browser.py) 接收 loopback CDP 的 JPEG 畫面串流，再交給設備原廠 SDL／GPU 顯示。接收端逐幀確認並只保留最新影像，避免方向鍵事件排在舊影像後面。CDP 埠由 Chromium 隨機選擇，僅綁定 loopback，是此顯示橋接的必要內部通道。
 
-安裝包含 Chromium、chromium-sandbox、Mesa 函式庫、util-linux、字型、CA、pip 與其 apt 相依。paho-mqtt 固定為 2.1.0，websocket-client 固定為 1.8.0，兩者均驗證套件雜湊。原生 SDL2／SDL2_image 沿用已在實機確認可用的原廠函式庫；安裝器會先確認能載入。最低檢查為內部儲存剩餘 1.5 GB，下載期間需保持 Wi-Fi 連線。
+安裝包含 Chromium、chromium-sandbox、Mesa 函式庫、util-linux、字型、CA、pip 與其 apt 相依。paho-mqtt 固定為 2.1.0，websocket-client 固定為 1.8.0，兩者均驗證套件雜湊。原生 libdrm、SDL2／SDL2_image 沿用已在實機確認可用的原廠函式庫；安裝器會先確認能載入。最低檢查為內部儲存剩餘 1.5 GB，下載期間需保持 Wi-Fi 連線。
 
 此路徑不使用 Xorg 或 Cog 輸出實體 LCD。Xorg 實驗雖可讀回正常 framebuffer，實體螢幕仍黑；原廠 SDL 的單色測試及網頁橋接則已由使用者確認可見。底層差異與原生 App／刷機研究見 [原生顯示研究](native-app-display-research.md)。目前不需要刷機。
 
@@ -100,10 +100,12 @@ TrimUI 的 [install-trimui-deps.sh](../browser/install-trimui-deps.sh) 使用 [D
 | B | 逐層返回，事件碼 304 |
 | L／R | 翻頁或切換上一台／下一台設備 |
 | Start | 在總覽暫停／恢復輪播 |
-| Y | 切換背光，MQTT 繼續接收 |
+| Y | 關閉背光並透過 DRM DPMS 停用顯示，再按一次恢復低亮度畫面；MQTT 繼續接收 |
 | Select + Start | 退出監控，回到原廠選單 |
 
-A／B 映射依使用者的實體標籤回報修正；事件注入已確認 305 開啟、304 返回，修正後的完整實體按鍵驗收仍待執行。關背光不代表面板供電已關閉，自動休眠由前述原廠設定與旗標停用。退出或啟動失敗時會嘗試還原原背光。
+A／B 映射依使用者的實體標籤回報修正；事件注入已確認 305 開啟、304 返回，修正後的完整實體按鍵驗收仍待執行。Y 鍵使用原生 libdrm 的 connector DPMS，在關閉時先將背光設為零，再切換顯示為 Off；喚醒先切回 On，再恢復監控亮度。SDL 呈現與電源切換共用鎖，關屏時停止送出 pageflip。這不會讓 Linux 或 Wi-Fi 進入系統休眠，自動休眠仍由前述設定與旗標停用。喚醒失敗時可再按 Y 重試，退出或啟動失敗時會嘗試恢復顯示與原背光。
+
+此韌體已實測 DPMS Off 時顯示管線 active=0，喚醒後為 On／active=1；這是驅動狀態證據，實際耗電與各面板電源軌仍未量測。原廠電源鍵還可能影響無線網路，因此本功能使用 Y，不接管電源鍵。介面研究見 [原生顯示研究](native-app-display-research.md#手動關屏與背景監控)。
 
 ## TrimUI 備份還原
 
@@ -132,23 +134,28 @@ bash browser/install-trimui.sh --ssh 192.168.5.160 --check
 # 開發電腦：模擬 SSH 預設登入／隱藏輸入，以及 MQTT 握手／訂閱、TrimUI 適配。
 python3 browser/test_install.py
 python3 browser/test_trimui_browser.py
+python3 browser/test_trimui_power.py
 ```
 
 使用者已確認原廠選單、原生 SDL 換色與 SDL 橋接監控頁都能在實體 LCD 顯示。正常執行日誌為 `/mnt/UDISK/hwmonitor/launch.log`；實作與測試結果適用於這台 Smart Pro S，其他韌體仍需重驗。
 
 2026-10-20 在第二台使用 Chromium 155.0.8059.79、原生 SDL2 與 1280×720 viewport。開發電腦版面測試涵蓋 1024×768、1280×720 與 Xorg 實驗時的 1279×719，包含 0／2／4 GPU。較窄的手機版面尚未完成適配。
 
-方向鍵測試從 evdev 事件寫入，量到正在輸出的 SDL framebuffer 選取底色改變，最後一輪五次約為 212 至 220 毫秒，原始數值與先前對照保存在 [SDL 驗證紀錄](evidence/trimui-sdl-2026-10-20.json)。這是數位顯示輸出延遲，不是相機量測的 LCD 光學延遲。修正包含最新影像槽、畫面串流背壓，以及避免 websocket-client 對大型影像執行重複的純 Python UTF-8 驗證；正常文字接收仍執行嚴格 UTF-8 解碼。[固定版本官方說明](https://github.com/websocket-client/websocket-client/blob/v1.8.0/docs/source/faq.rst)。
+方向鍵測試從 evdev 事件寫入，量到正在輸出的 SDL framebuffer 選取底色改變，顯示橋接優化後的一輪五次約為 212 至 220 毫秒，原始數值與先前對照保存在 [SDL 驗證紀錄](evidence/trimui-sdl-2026-10-20.json)。這是數位顯示輸出延遲，不是相機量測的 LCD 光學延遲。修正包含最新影像槽、畫面串流背壓，以及避免 websocket-client 對大型影像執行重複的純 Python UTF-8 驗證；正常文字接收仍執行嚴格 UTF-8 解碼。[固定版本官方說明](https://github.com/websocket-client/websocket-client/blob/v1.8.0/docs/source/faq.rst)。
 
 實機回歸測試如下。它們會寫入方向鍵事件或關閉監控，執行前需在測試掌機開啟 App；輸入延遲測試使用三台在線主機的 1280×720 總覽。
 
 ```bash
 # 寫入實機：在 TrimUI 有本專案 browser 原始碼的目錄執行。
 python3 measure_trimui_input.py
+# 寫入實機：三輪 Y 關屏／喚醒，第一輪保持關屏 12 秒；需有即時 MQTT 資料。
+python3 test_trimui_screen.py
 # 寫入實機並退出：31 是此設備進入監控前的背光原值。
 python3 test_trimui_exit.py --expected-brightness 31
 ```
 
 最後一輪退出耗時 1.85 秒。退出測試確認回到原廠選單、恢復背光 31、原生瀏覽器橋接結束，臨時掛載與鎖定目錄清空。防休眠設定保留。實測資料由 [SDL 驗證紀錄](evidence/trimui-sdl-2026-10-20.json) 保存；[Xorg 實驗紀錄](evidence/trimui-chromium-2026-10-20.json) 與 [Cog 黑屏紀錄](evidence/trimui-black-screen-2026-10-20.json) 保留為失敗案例。
+
+Y 鍵三輪關屏／喚醒測試通過，第一輪關屏保持 12 秒，超過主機資料的 10 秒過期門檻，MQTT 與三台主機持續在線。關屏時 DPMS Off、CRTC active=0、背光為零；喚醒恢復 On／active=1。從關屏狀態直接退出耗時 2.36 秒，恢復原廠選單、背光 31 並釋放瀏覽器、掛載與鎖。加入關屏協調後，方向鍵數位顯示延遲回歸測試五次約為 203 至 237 毫秒。完整數值見 [關屏驗證紀錄](evidence/trimui-screen-power-2026-10-20.json)。此測試使用事件注入，尚未收到更新後實體 Y 鍵的使用者確認。
 
 長時間穩定性、耗電、重新開機後防休眠及全部實體按鍵操作，仍需驗證。

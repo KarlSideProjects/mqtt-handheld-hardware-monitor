@@ -61,3 +61,13 @@ Direct DRM/libdrm 測試可選 connector、CRTC 與 plane，並記錄 plane 的�
 [trimui_browser.py](../browser/trimui_browser.py) 讓 headless Chromium 提供 JPEG 串流，由原廠 SDL_image 載入 texture，再經 SDL_RenderCopy／RenderPresent 顯示。實體可見性已由使用者確認；安裝與延遲結果由 [安裝驗證](installation.md#驗證與限制) 管理。這個方案保留共用 HTML、MQTT 與原生按鍵服務，不需要第二套儀表板 UI 或刷機。
 
 [CDP Page.startScreencast](https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-startScreencast) 產生影像事件，每幀須確認；裝置支援時使用單幀背壓與最新影像模式。SDL 在主執行緒依序載入 texture、清除、複製、呈現並釋放 texture，API 依據為 [IMG_LoadTexture_RW](https://wiki.libsdl.org/SDL2_image/IMG_LoadTexture_RW) 與 [SDL_RenderPresent](https://wiki.libsdl.org/SDL2/SDL_RenderPresent)。這些官方介面證明可用的開發方式，並非對任意韌體的效能保證。
+
+## 手動關屏與背景監控
+
+此台實機寫入 `fb0/blank=4` 後，DPMS 仍為 On、CRTC active=1，故未採用它作為正式關屏路徑。Linux 5.15 的 fbdev sysfs 只是將要求交給驅動；`blank` 的讀取函式直接回傳空內容，不能用空字串判定成功或失敗。[fbsysfs.c](https://github.com/torvalds/linux/blob/v5.15/drivers/video/fbdev/core/fbsysfs.c)。`bl_power` 的標準語意是背光電源，也不等同整個面板供電。[backlight ABI](https://github.com/torvalds/linux/blob/v5.15/Documentation/ABI/stable/sysfs-class-backlight)。
+
+原廠 keymon 的「turn off lcd」分支 `0x2e44` 呼叫 `0x7250(0)`，後者寫背光 brightness；同一路徑還涉及無線網路及後續休眠。字串本身不能證明關閉面板電源，也不適合直接複製來維持背景 MQTT。
+
+目前以 libdrm 枚舉已連線的 DSI connector 與 DPMS property，不寫死實驗時的 ID。此韌體允許 root 另外開啟 card0 執行 legacy connector DPMS，無須搶走 SDL 的 DRM master。Off 使用值 3，On 使用值 0；實測 Off 時 CRTC active=0、MQTT 保持 Connected，恢復後為 On／active=1。SDL 呈現與 DPMS 切換共用檔案鎖，關屏時跳過呈現，避免持續 pageflip 錯誤。
+
+Linux 的 DPMS sysfs 只回報 connector 邏輯狀態，仍需另查 CRTC、實體畫面及功耗。[drm_sysfs.c](https://github.com/torvalds/linux/blob/v5.15/drivers/gpu/drm/drm_sysfs.c)。此實作使用 legacy property 呼叫；atomic API 不能直接寫同一 DPMS property，內部會以 connector 狀態計算 CRTC active。[drm_atomic_uapi.c](https://github.com/torvalds/linux/blob/v5.15/drivers/gpu/drm/drm_atomic_uapi.c)。具體操作與驗收範圍由 [安裝說明](installation.md#trimui-按鍵操作) 管理，未量測面板電源軌與省電幅度。

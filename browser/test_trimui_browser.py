@@ -40,3 +40,16 @@ except RuntimeError as error:
 else:
     raise AssertionError('Chromium protocol error was ignored')
 print('PASS: CDP interleaved events, retained first frame, per-frame ACK with shared session ID, error propagation')
+
+# Do not submit pageflips while native DRM is powered off.
+from unittest.mock import Mock, patch
+from trimui_browser import Display
+presenter = Display.__new__(Display)
+presenter._present = Mock()
+with patch('trimui_browser.Path.read_text', return_value='Off\n'):
+    assert presenter.present(b'jpeg') is False
+    presenter._present.assert_not_called()
+with patch('trimui_browser.Path.read_text', return_value='On\n'):
+    assert presenter.present(b'jpeg') is True
+    presenter._present.assert_called_once_with(b'jpeg')
+print('PASS: powered-off display skips native pageflips and resumes when on')

@@ -68,12 +68,12 @@ Cog／WPE 是直接使用 DRM 的候選方案，但本機試驗出現 EGL displa
 | --- | --- |
 | [monitor.html](../browser/monitor.html) | 共用頁面與動態設備標籤；加入短高度版面，兩台掌機尺寸測試通過，手機窄版仍待適配 |
 | [monitor.py](../browser/monitor.py) | 共用 MQTT、資料正規化與 HTTP；輸入及 thermal 類型可由設備適配指定 |
-| [trimui_monitor.py](../browser/trimui_monitor.py) | 依名稱尋找手把，適配本機感測器、A／B 與背光；完整實體按鍵矩陣仍待驗收 |
+| [trimui_monitor.py](../browser/trimui_monitor.py) | 依名稱尋找手把，適配本機感測器、A／B、背光與 DRM DPMS；完整實體按鍵矩陣仍待驗收 |
 | [trimui_browser.py](../browser/trimui_browser.py) | headless Chromium 串流交由原廠 SDL 顯示；已確認實體畫面可見 |
 | [install-trimui.sh](../browser/install-trimui.sh) 與 `browser/trimui-*.sh` | Apps 入口、私有 rootfs、停用自動休眠與退出清理；套件及還原邊界見安裝說明 |
 | [test_monitor_layout.cjs](../browser/test_monitor_layout.cjs) | 以 MONITOR_VIEWPORT 測試寬高，涵蓋零／兩／四張 GPU；完整視覺基準仍待建立 |
 
-TrimUI 以背光介面手動關屏，R36 使用 X11 DPMS，兩者不能視為相同的電源控制。窄螢幕單欄與垂直捲動仍是後續提案，不屬於本次掌機版面的驗證結果。
+TrimUI 使用原生 libdrm DPMS 與背光介面手動關屏，R36 透過 X11 DPMS；兩者的呼叫方式與驗收需分開處理。窄螢幕單欄與垂直捲動仍是後續提案，不屬於本次掌機版面的驗證結果。
 
 若需要手機連入同一服務，還須修改目前僅綁定 `127.0.0.1:8766` 的設定，以及 `/control` 固定 localhost 的 Host／Origin 驗證。每個瀏覽器目前也會共用同一份選取、分頁與暫停狀態；獨立操作需要拆分瀏覽狀態。這些工作不影響兩台掌機各自執行本機服務的方案。
 

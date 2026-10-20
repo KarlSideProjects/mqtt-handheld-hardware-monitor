@@ -1,6 +1,7 @@
 """Display the shared Chromium page through the handheld's native SDL renderer."""
 import base64
 import ctypes as C
+import fcntl
 from collections import deque
 import json
 from pathlib import Path
@@ -90,6 +91,14 @@ class Display:
             raise RuntimeError(self.sdl.SDL_GetError().decode(errors='replace'))
 
     def present(self, jpeg):
+        with open('/tmp/hwmonitor-display.lock', 'a') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            if Path('/sys/class/drm/card0-DSI-1/dpms').read_text().strip() == 'Off':
+                return False
+            self._present(jpeg)
+            return True
+
+    def _present(self, jpeg):
         # RWFromConstMem borrows this buffer until IMG_LoadTexture_RW finishes.
         buffer = C.create_string_buffer(jpeg)
         rw = self.sdl.SDL_RWFromConstMem(buffer, len(jpeg))
@@ -197,11 +206,14 @@ def main():
                 if errors:
                     raise errors[0]
                 frame, latest[0] = latest[0], None
+            if frames == 0 and Path('/sys/class/drm/card0-DSI-1/dpms').read_text().strip() == 'Off':
+                first_frame_deadline = time.monotonic() + 10
             if frame is None:
                 if frames == 0 and time.monotonic() >= first_frame_deadline:
                     raise TimeoutError('Chromium did not produce a display frame within 10 seconds')
                 continue
-            display.present(base64.b64decode(frame['data'], validate=True))
+            if not display.present(base64.b64decode(frame['data'], validate=True)):
+                continue
             frames += 1
             if frames == 1:
                 print('SDL dashboard: first Chromium frame presented', flush=True)

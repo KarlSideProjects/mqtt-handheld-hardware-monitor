@@ -51,7 +51,7 @@ APT
     printf '#!/bin/sh\nexit 101\n' > "$root/usr/sbin/policy-rc.d"
     chmod 755 "$root/usr/sbin/policy-rc.d"
     # Headless Chromium uses Debian libraries; the native SDL presenter keeps the vendor GPU ABI.
-    python3 -c 'import ctypes; ctypes.CDLL("libSDL2.so"); ctypes.CDLL("libSDL2_image.so")'
+    python3 -c 'import ctypes; ctypes.CDLL("libSDL2.so"); ctypes.CDLL("libSDL2_image.so"); ctypes.CDLL("libdrm.so.2")'
     install -m 755 "$source_dir/trimui-rootfs.sh" "$runtime/run-rootfs.sh"
     "$runtime/run-rootfs.sh" "$root" /usr/bin/env -u LD_LIBRARY_PATH /bin/sh -ec '
         dpkg --configure -a || true

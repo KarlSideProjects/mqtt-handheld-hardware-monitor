@@ -168,6 +168,25 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 
 先依 [hwmonitor-mqtt 的安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
 
+Linux 或 PVE 採集端可從 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 取得 `install.sh`。在主機上執行以下準備命令，先在 `.env` 設定 MQTT 連線資訊：
+
+```bash
+git clone https://github.com/KarlSideProjects/hwmonitor-mqtt.git
+cd hwmonitor-mqtt
+test -e .env || cp .env.example .env
+chmod 600 .env
+nano .env
+```
+
+一般 Linux 使用 Docker Compose；先預覽再安裝：
+
+```bash
+bash install.sh --dry-run
+sudo bash install.sh
+```
+
+PVE 預設使用原生 systemd，也可選擇 Docker。PVE 必須先準備好 `/etc/hwmonitor-mqtt/pve.env` 與可信 CA，再以 root 執行 dry-run 和安裝命令；若已用 `root` 登入，可省略命令中的 `sudo`。設定檔及 CA 的建立方式、權限與 API 權限需求，請看[採集端 PVE 安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+
 ## 安裝到掌機
 
 兩台設備使用不同安裝腳本，共用網頁與 MQTT 程式：R36 使用 [install.sh](browser/install.sh)，TrimUI 使用實驗性的 [install-trimui.sh](browser/install-trimui.sh)。SSH 預設登入、失敗後隱藏輸入帳密，以及 MQTT 互動設定，見 [雙設備安裝說明](docs/installation.md)。兩支腳本都會自動安裝相依套件；TrimUI 使用 headless Chromium＋原廠 SDL 顯示共用網頁，使用者已確認實體螢幕可見；驗收範圍與限制見安裝說明。實機依據見 [移植研究](docs/trimui-smart-pro-s-research.md)。以下流程適用於 R36 MAX 2。

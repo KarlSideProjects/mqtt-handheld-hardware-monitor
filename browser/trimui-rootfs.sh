@@ -1,13 +1,32 @@
 #!/bin/bash
 # Supply temporary private device mounts, then run a command in the application rootfs.
 set -euo pipefail
+if [[ ${1:-} == --preflight ]]; then preflight=1; shift; else preflight=0; fi
 root=${1:?Rootfs required}; shift
-[[ $root == /* && -x $root/usr/bin/env && $# -gt 0 ]] || { echo 'Invalid rootfs/command.' >&2; exit 1; }
-mkdir "$root/.mount-lock" 2>/dev/null || { echo 'Runtime is already mounted; exit the monitor before updating.' >&2; exit 1; }
+[[ $root == /* && -d $root ]] || { echo 'Invalid rootfs.' >&2; exit 1; }
+lock=$root/.mount-lock
+mountinfo=${TRIMUI_MOUNTINFO:-/proc/self/mountinfo}
+mounted_root() {
+    [[ -r $mountinfo ]] || return 2
+    awk -v root="$root" '$5 == root || index($5, root "/") == 1 { found=1 } END { if (found) exit 0; exit 1 }' "$mountinfo"
+}
+assert_unmounted() {
+    local status
+    if mounted_root; then refuse_lock; else status=$?; fi
+    ((status == 1)) || refuse_lock
+}
+refuse_lock() { echo 'Runtime is already mounted; exit the monitor before updating.' >&2; exit 1; }
+assert_unmounted
+if [[ -d $lock ]]; then rmdir "$lock" 2>/dev/null || refuse_lock; fi
+[[ ! -L $lock && ( ! -e $lock || -f $lock ) ]] || refuse_lock
+exec {lock_fd}>>"$lock"
+flock -n "$lock_fd" || refuse_lock
+assert_unmounted
+if ((preflight)); then exit 0; fi
+[[ -x $root/usr/bin/env && $# -gt 0 ]] || { echo 'Invalid rootfs/command.' >&2; exit 1; }
 mounted=() child=
 cleanup() {
     status=$?
-    mount_failed=0
     trap - EXIT
     trap '' TERM INT
     if [[ -n $child ]]; then
@@ -25,9 +44,8 @@ cleanup() {
             if umount "${mounted[i]}" 2>/dev/null; then break; fi
             sleep .1
         done
-        if ((attempt == 30)); then echo "Failed to unmount ${mounted[i]}" >&2; status=1; mount_failed=1; fi
+        if ((attempt == 30)); then echo "Failed to unmount ${mounted[i]}" >&2; status=1; fi
     done
-    if ((mount_failed == 0)); then rmdir "$root/.mount-lock" || status=1; fi
     exit "$status"
 }
 trap cleanup EXIT

@@ -1,0 +1,16 @@
+{
+  "connection": "Connected",
+  "online_hosts": 3,
+  "brightness": 16,
+  "bl_power": 0,
+  "active_planes": [
+    {
+      "plane": 119,
+      "fb": 163,
+      "owner": "trimui_osdd"
+    }
+  ],
+  "application_scanout_present": false,
+  "scope": "Necessary Cog DRM scanout check; does not certify physical LCD output",
+  "probe_exit": 1
+}

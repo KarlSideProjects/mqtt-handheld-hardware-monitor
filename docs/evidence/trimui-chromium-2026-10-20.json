@@ -1,0 +1,88 @@
+{
+  "device": "TrimUI Smart Pro S",
+  "date": "2026-10-20",
+  "browser": "Chromium 155.0.8059.79",
+  "display_path": "Xorg modesetting AccelMethod none, Chromium --disable-gpu",
+  "browser_uid": 65534,
+  "chromium_sandbox_disabled": false,
+  "display_mode": [
+    1280,
+    720
+  ],
+  "measured_viewport": [
+    1279,
+    719
+  ],
+  "connection": "Connected",
+  "online_hosts": 3,
+  "scanout": {
+    "owner": "Xorg",
+    "format": "XR24",
+    "modifier": 0,
+    "size": [
+      1280,
+      720
+    ],
+    "pitch": 5120,
+    "capture": "active DRM framebuffer mapped using libdrm and MAP_DUMB"
+  },
+  "layout_checks": {
+    "local_playwright_viewports": [
+      [
+        1024,
+        768
+      ],
+      [
+        1280,
+        720
+      ],
+      [
+        1279,
+        719
+      ]
+    ],
+    "gpu_fixtures": [
+      0,
+      2,
+      4
+    ],
+    "device_cdp_sections": [
+      "cpu",
+      "gpu",
+      "memory",
+      "network",
+      "disks",
+      "temperatures",
+      "history"
+    ],
+    "overflow": false
+  },
+  "input_checks": {
+    "method": "evdev event injection, not mechanical button presses",
+    "detail": true,
+    "backlight_off_and_wake": true,
+    "exit_combo": "Select + Start"
+  },
+  "exit_checks": {
+    "durations_seconds": [
+      1.44,
+      1.58
+    ],
+    "mainui_restored": true,
+    "brightness_restored": 31,
+    "xorg_remaining": false,
+    "rootfs_mounts_remaining": 0,
+    "mount_lock_remaining": false
+  },
+  "physical_lcd_verified": false,
+  "long_duration_idle_verified": false,
+  "reboot_verified": false,
+  "ci_deployed": false,
+  "limitations": "User reports physical LCD remains black despite correct Xorg framebuffer readback. Rendering/readback checks do not certify final composition or LCD output. Native SDL/OSD diagnostics are in progress.",
+  "physical_lcd_reported_black": true,
+  "osd_disabled_test": {
+    "active_application_plane": "Xorg only",
+    "user_result": "LCD still black",
+    "osd_restarted_after_test": true
+  }
+}

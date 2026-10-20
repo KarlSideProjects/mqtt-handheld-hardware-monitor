@@ -62,8 +62,10 @@ def normalize(data):
 
 class LocalStatus:
     """Read the handheld, independently of the MQTT hosts, at most once per 2 seconds."""
-    def __init__(self, proc=Path('/proc'), supplies=Path('/sys/class/power_supply'), thermal=Path('/sys/class/thermal')):
+    def __init__(self, proc=Path('/proc'), supplies=Path('/sys/class/power_supply'), thermal=Path('/sys/class/thermal'),
+                 thermal_types=('soc-thermal',)):
         self.proc, self.supplies, self.thermal = proc, supplies, thermal
+        self.thermal_types = thermal_types
         self.previous = None
         self.updated = -math.inf
         self.data = {}
@@ -95,7 +97,7 @@ class LocalStatus:
         except (ValueError, KeyError, IndexError, ZeroDivisionError):
             pass
         for zone in sorted(self.thermal.glob('thermal_zone*')):
-            if self.read(zone / 'type') == 'soc-thermal':
+            if self.read(zone / 'type') in self.thermal_types:
                 try:
                     data['temperature'] = int(self.read(zone / 'temp')) / 1000
                 except ValueError:
@@ -411,11 +413,12 @@ class StickNavigation:
         return None
 
 
-def controls(state, server):
+def controls(state, server, path='/dev/input/by-path/platform-odroidgo3-joypad-event-joystick',
+             buttons=BUTTONS, exit_buttons=(704, 304), hat_axes=()):
     event = struct.Struct('@llHHi')
     pressed = set()
     try:
-        with open('/dev/input/by-path/platform-odroidgo3-joypad-event-joystick', 'rb', buffering=0) as stream:
+        with open(path, 'rb', buffering=0) as stream:
             limits, initial = {}, {}
             for axis in (0, 1, 3, 4):
                 try:
@@ -443,6 +446,11 @@ def controls(state, server):
                     return
                 _, _, kind, code, value = event.unpack(raw)
                 if kind == 3:
+                    if code in hat_axes:
+                        if value:
+                            state.action(('left' if value < 0 else 'right') if code == 16
+                                         else ('up' if value < 0 else 'down'))
+                        continue
                     stick.update(code, value)
                     continue
                 if kind == 0 and code == 0:
@@ -456,11 +464,11 @@ def controls(state, server):
                     pressed.add(code)
                 else:
                     pressed.discard(code)
-                if {704, 304} <= pressed:
+                if set(exit_buttons) <= pressed:
                     server.shutdown()
                     return
-                if value == 1 and code in BUTTONS:
-                    state.action(BUTTONS[code])
+                if value == 1 and code in buttons:
+                    state.action(buttons[code])
     except OSError as error:
         print(f'Gamepad unavailable: {error}', flush=True)
 

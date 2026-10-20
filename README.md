@@ -1,8 +1,21 @@
-# R36 MAX 2 Hardware Monitor
+# MQTT Handheld Hardware Monitor
 
-**用一台低成本掌機，隨時查看多台電腦的硬體狀態。**
+A multi-device MQTT hardware monitoring dashboard for Linux handheld consoles. Monitor multiple PCs' CPU, GPU, VRAM, RAM, network, disks and temperatures with a shared web UI, a Python backend, physical controls and manual screen power saving. Device integrations use Chromium, with a native SDL2 display bridge on TrimUI Smart Pro S.
 
-把 R36 MAX 2 變成桌上的獨立監控螢幕，透過 MQTT 顯示 CPU、GPU、VRAM、記憶體、網路、磁碟與溫度。保留原本的遊戲選單，從 **Ports → Hardware Monitor** 就能進入監控。
+**將 Linux 掌機變成獨立硬體監控螢幕，隨時查看多台電腦的狀態。**
+
+本專案以共用網頁與 MQTT 資料服務支援不同設備，保留各設備原本的遊戲選單，並分別提供安裝、按鍵及顯示適配。
+
+| 設備 | 系統與顯示方式 | 啟動入口與支援狀態 |
+| --- | --- | --- |
+| R36 MAX 2 | dArkOS4Clone／Debian、Chromium／Xorg | Ports → Hardware Monitor；已實機驗證 |
+| TrimUI Smart Pro S | 原廠 Buildroot、headless Chromium／原生 SDL2 | Apps → Hardware Monitor；實驗支援，已確認實體畫面可見 |
+
+安裝與驗收範圍見 [雙設備安裝說明](docs/installation.md)。其他 Linux 設備仍需適配顯示、輸入、背光與安裝流程；本專案尚未驗證所有掌機或一般 Linux 電腦作為顯示端。
+
+開發與驗收請看 [外部設備 CI 驗證手冊](docs/ci-validation.md)：說明模擬器的驗證範圍、自架 runner 配置、實機畫面與功能測試，以及失敗證據的保存。CI 建置流程目前為草案，尚未部署。
+
+原生 App、替代繪圖路徑及刷機需求的調查，見 [Smart Pro S 原生顯示研究](docs/native-app-display-research.md)。
 
 ## 實機畫面
 
@@ -52,13 +65,15 @@
 
 ## 低成本的價值
 
-需要的顯示設備就是一台 R36 MAX 2、系統 SD 卡和電源。如果手邊已經有掌機，就能沿用螢幕、實體按鍵與 Wi-Fi，把它放在桌邊查看電腦狀態。
+需要的顯示設備是一台受支援的 Linux 掌機、對應系統儲存與電源。如果手邊已經有掌機，就能沿用螢幕、實體按鍵與 Wi-Fi，把它放在桌邊查看電腦狀態。
 
 採集程式在被監控電腦上執行，掌機負責接收與顯示。已有 MQTT broker 的使用者可以直接接上原本的資料流；這份專案不要求另建一套 broker。
 
-漫畫風的晶片角色、色塊儀表和使用量條，讓資訊容易辨識。監控開啟期間不會自動休眠，可用 FN 手動關閉顯示，並從啟動時隱藏滑鼠游標，全程使用掌機按鍵操作。
+漫畫風的晶片角色、色塊儀表和使用量條，讓資訊容易辨識。監控開啟期間不會自動休眠，可用各機型對應的按鍵手動關閉顯示，並從啟動時隱藏滑鼠游標，全程使用掌機按鍵操作。
 
-## 按鍵操作
+## R36 MAX 2 按鍵操作
+
+TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimUI 按鍵操作](docs/installation.md#trimui-按鍵操作)。
 
 兩支類比搖桿皆可使用，具有中心死區，長推會連續移動。斜推依偏移較大的方向移動。
 
@@ -77,7 +92,7 @@
 ## 資料串接
 
 ```text
-被監控電腦上的 Agent → MQTT broker → R36 MAX 2 監控畫面
+被監控電腦上的 Agent → MQTT broker → 掌機本機服務 → 共用監控網頁
 ```
 
 本專案相容 [hwmonitor-mqtt](https://github.com/jhihweijhan/hwmonitor-mqtt) 的資料格式，預設訂閱 `sys/agents/+/metrics`。每台電腦使用不同的 `host` 名稱，掌機就會自動建立對應項目。
@@ -85,6 +100,8 @@
 先依 [hwmonitor-mqtt 的安裝說明](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
 
 ## 安裝到掌機
+
+兩台設備使用不同安裝腳本，共用網頁與 MQTT 程式：R36 使用 [install.sh](browser/install.sh)，TrimUI 使用實驗性的 [install-trimui.sh](browser/install-trimui.sh)。SSH 預設登入、失敗後隱藏輸入帳密，以及 MQTT 互動設定，見 [雙設備安裝說明](docs/installation.md)。兩支腳本都會自動安裝相依套件；TrimUI 使用 headless Chromium＋原廠 SDL 顯示共用網頁，使用者已確認實體螢幕可見；驗收範圍與限制見安裝說明。實機依據見 [移植研究](docs/trimui-smart-pro-s-research.md)。以下流程適用於 R36 MAX 2。
 
 目前交付的是**顯示端原始碼與啟動腳本**，不包含整合完成的刷機映像。以下步驟用於已安裝 dArkOS4Clone、可透過 SSH 登入的 R36 MAX 2，帳號為 `ark`。系統安装請參考 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone) 的 R36Max2 文件。
 
@@ -96,19 +113,19 @@
 
 ```bash
 # 寫入掌機：下載並安裝；先退出遊戲或監控程式。
-git clone https://github.com/KarlSideProjects/r36max2-hwmonitor.git
-cd r36max2-hwmonitor
+git clone https://github.com/KarlSideProjects/mqtt-handheld-hardware-monitor.git
+cd mqtt-handheld-hardware-monitor
 sudo -v
 bash browser/install.sh
 ```
 
 腳本安裝 Chromium、Xorg 與 Python MQTT 依賴，將 Debian GBM 函式庫放在應用程式自己的 `lib` 目錄，保留遊戲系統的 Mali 函式庫。它啟用 `ark` 的 linger 和系統內建 ZRAM，安裝程式與圖示，再重新載入遊戲選單。常亮與隱藏游標由啟動腳本處理。已有相依套件時跳過套件安裝。
 
-每次安裝先建立私有 `/home/ark/hwmonitor-backup.*` 備份，輸出完整路徑。備份包含 MQTT 帳密，不要上傳。已存在的 MQTT 設定會保留；提供 `--config FILE` 才會替換。重複執行會更新檔案，保留其他 Ports 項目與遊玩紀錄。
+每次安裝先建立私有 `/home/ark/hwmonitor-backup.*` 備份，輸出完整路徑。備份包含 MQTT 帳密，不要上傳。腳本優先使用既有 MQTT 設定；提供 `--config FILE` 可指定另一份設定。驗證失敗時可互動修改帳密，成功後才儲存。重複執行會更新檔案，保留其他 Ports 項目與遊玩紀錄。
 
 ### MQTT 設定與更新
 
-首次安裝若未提供設定，腳本會提示 `MQTT setup pending`。由操作者依 broker 資訊填寫設定檔，不要把帳密寫進 Git 或 AI 的公開輸出。
+首次安裝未提供設定時，腳本會提示 broker 位址、TLS 與埠號，先嘗試環境變數提供的預設帳密，未設定則先試匿名。登入或訂閱遭拒後提示輸入帳號及隱藏密碼。也可以依以下步驟準備設定檔；不要把帳密寫進 Git 或 AI 的公開輸出。
 
 ```bash
 # 寫入掌機：準備本機設定。
@@ -135,7 +152,7 @@ bash browser/install.sh
 
 可把以下文字交給下一個 AI；補上掌機 IP 及首次安裝的私有 MQTT 設定檔位置。
 
-> 請在 R36 MAX 2 上安裝 KarlSideProjects/r36max2-hwmonitor。先讀 README 的安裝流程與 browser/install.sh。透過 SSH 以 ark 登入掌機，確認是 Debian 13 ARM64 的 dArkOS4Clone，並且有 /roms/ports、/dev/dri/card0、/dev/input/event2 與內建 zram-swap.service。使用既有乾淨 checkout，或下載專案；不要覆蓋未提交修改。退出正在執行的遊戲或監控。執行 sudo -v 後執行 bash browser/install.sh；首次需要 MQTT 設定時使用 --config 指向掌機上的私有 JSON 檔。已有設定就保留，不要輸出帳密。記錄備份路徑，執行 --check，從 Ports 開啟 Hardware Monitor，再檢查 /status 的連線和主機資料、圖示、按鍵、不自動休眠、FN 關閉與喚醒，以及退出回選單。若 SSH 或 MQTT 資訊不足，只詢問缺少的資訊。報告通過哪些檢查及未驗證項目；不要自行刷機或更改 broker／採集端。
+> 請在 R36 MAX 2 上安裝 KarlSideProjects/mqtt-handheld-hardware-monitor。先讀 README 的安裝流程與 browser/install.sh。透過 SSH 以 ark 登入掌機，確認是 Debian 13 ARM64 的 dArkOS4Clone，並且有 /roms/ports、/dev/dri/card0、/dev/input/event2 與內建 zram-swap.service。使用既有乾淨 checkout，或下載專案；不要覆蓋未提交修改。退出正在執行的遊戲或監控。執行 sudo -v 後執行 bash browser/install.sh；首次需要 MQTT 設定時使用 --config 指向掌機上的私有 JSON 檔。已有設定就保留，不要輸出帳密。記錄備份路徑，執行 --check，從 Ports 開啟 Hardware Monitor，再檢查 /status 的連線和主機資料、圖示、按鍵、不自動休眠、FN 關閉與喚醒，以及退出回選單。若 SSH 或 MQTT 資訊不足，只詢問缺少的資訊。報告通過哪些檢查及未驗證項目；不要自行刷機或更改 broker／採集端。
 
 ### 驗證安裝
 
@@ -190,11 +207,16 @@ sudo systemctl start emulationstation
 
 2026-10-07 已在 R36 MAX 2 上接收三台電腦的真實資料，驗證總覽、詳細頁、按鍵操作、常亮及退出後回到遊戲選單。程式測試涵蓋七台主機分頁；版面測試涵蓋零、兩、四張 GPU，以及 1024 × 768 下沒有捲動或裁切。
 
+TrimUI 的實體顯示、方向鍵延遲、按鍵映射與退出清理結果見 [雙設備安裝驗證](docs/installation.md#驗證與限制)。兩台掌機已共用同一份網頁；手機窄版仍待適配。
+
 GPU、VRAM 與溫度等資訊取決於採集端回報內容。缺少資料時以橫線標示，不以零值代替。更多主機的實機顯示，以及其他掌機型號，仍需各自驗證。
 
 在開發電腦執行基本測試，Python 測試不需要連接 MQTT broker：
 
 ```bash
+python3 browser/test_install.py
+python3 browser/test_trimui_browser.py
+python3 browser/test_trimui_power.py
 python3 browser/test_monitor.py
 python3 browser/test_monitor_events.py
 python3 browser/test_menu.py

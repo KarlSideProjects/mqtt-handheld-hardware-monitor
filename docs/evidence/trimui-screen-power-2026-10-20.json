@@ -1,0 +1,67 @@
+{
+  "result": "PASS",
+  "cycles": [
+    {
+      "cycle": 1,
+      "hold_seconds": 12,
+      "off_ms": 371.6,
+      "on_ms": 606.4,
+      "online_hosts": 3
+    },
+    {
+      "cycle": 2,
+      "hold_seconds": 2,
+      "off_ms": 357.2,
+      "on_ms": 614.9,
+      "online_hosts": 3
+    },
+    {
+      "cycle": 3,
+      "hold_seconds": 2,
+      "off_ms": 390.6,
+      "on_ms": 632.7,
+      "online_hosts": 3
+    }
+  ],
+  "scope": "evdev code 308, DPMS, CRTC, backlight, live MQTT; not optical or electrical",
+  "date": "2026-10-20",
+  "device": "TrimUI Smart Pro S",
+  "method": "evdev code 308 (physical X), native libdrm legacy DSI connector DPMS; no system suspend",
+  "dpms_off": "Off",
+  "crtc_active_while_off": 0,
+  "backlight_while_off": 0,
+  "dpms_after_wake": "On",
+  "crtc_active_after_wake": 1,
+  "exit_while_screen_off": {
+    "passed": true,
+    "seconds": 2.36,
+    "stock_menu": true,
+    "brightness": 31,
+    "browser_remaining": false,
+    "rootfs_mounts_remaining": 0,
+    "mount_lock_remaining": false,
+    "dpms": "On"
+  },
+  "physical_button_user_confirmation": false,
+  "optical_measurement": false,
+  "electrical_power_measured": false,
+  "long_duration_idle_verified": false,
+  "direction_input_to_sdl_scanout_ms_after_power_update": [
+    214.7,
+    222.3,
+    203.2,
+    237.4,
+    202.8
+  ],
+  "latest_launch_pageflip_errors": 0,
+  "final_state": {
+    "mqtt": "Connected",
+    "online_hosts": 3,
+    "screen_off": false,
+    "dpms": "On",
+    "brightness": 16
+  },
+  "deployed_source_matches": true,
+  "physical_button_label": "X",
+  "button_label_source": "User corrected the physical key label to X; event code 308 and device configuration unchanged"
+}

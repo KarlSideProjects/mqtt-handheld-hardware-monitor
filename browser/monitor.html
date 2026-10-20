@@ -29,6 +29,14 @@
 body.device-summary h1{font-size:36px}
 body.device-summary #summary{font-size:19px}
 
+@media (min-width:900px) and (max-height:740px){
+ .distance-detail>.usage-panel{padding:10px 16px}
+ .distance-detail .panel h3{font-size:26px;line-height:30px;margin-bottom:4px}
+ .distance-detail .reading{line-height:1.05;margin:4px 0 6px}
+ .distance-detail .track{height:14px;margin-bottom:6px}
+ .distance-detail .reading-note,.distance-detail .reading-meta{font-size:20px;line-height:24px}
+}
+
 .distance-detail .gpu-readings{height:calc(100% - 44px);display:grid;grid-template-rows:repeat(var(--gpu-count),minmax(0,1fr));gap:8px}
 .distance-detail .gpu-reading{min-height:0;display:flex;flex-direction:column;justify-content:center}
 .distance-detail .gpu-reading+.gpu-reading{border-top:1px solid #cda8b7}
@@ -90,6 +98,9 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .focus-gpus .sensor{font-size:24px;line-height:32px}
 .focus-gpus .focus-chart small{font-size:21px;line-height:28px}
 .focus-gpus .focus-chart svg{height:115px;margin-top:8px}
+@media (min-width:900px) and (max-height:740px){
+ .focus-gpus .focus-chart svg{height:95px}
+}
 .focus-list{grid-template-rows:170px 100px minmax(0,1fr)}
 .focus-list>.panel{padding:10px 14px}
 .focus-list .io-totals strong{font-size:38px;line-height:44px;margin:2px 0 4px}
@@ -106,10 +117,16 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .focus-activity strong{font-size:32px;line-height:38px}
 .focus-activity small{font-size:18px;line-height:24px}
 .focus-activity svg{height:115px;margin-top:12px}
+@media (min-width:900px) and (max-height:740px){
+ .item-card{padding:4px 10px}
+ .item-card h4{font-size:20px;line-height:24px;margin-bottom:3px}
+ .item-card .sensor{font-size:20px;line-height:24px}
+ .item-card .item-extra{font-size:16px;line-height:18px}
+}
 </style>
 <header><img src="/assets/hardware-buddy.svg" alt="Smiling chip mascot"><div><div class="brand-note">Hardware buddies</div><h1 id="title">Hardware Monitor</h1></div><aside id="device-status" aria-label="R36 handheld status"><div><small>R36 Temp</small><strong id="local-temp">—</strong></div><div><small>R36 CPU</small><strong id="local-cpu">—</strong></div><div><small>R36 RAM</small><strong id="local-memory">—</strong></div><div id="local-battery-box"><small>Battery <span id="charge-icon"></span></small><strong id="local-battery">—</strong></div></aside><span id="connection">Connecting…</span></header>
 <div id="summary"></div><main id="main"></main>
-<footer><span id="help"><kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Details <kbd>B</kbd> Back</span><span><button onclick="control('previous')">L1 Previous</button> <button onclick="control('next')">R1 Next</button> <button onclick="control('toggle')">Start Pause / resume</button></span><span><button id="screen-button" onclick="control('screen')" aria-label="Turn screen off; press FN to wake">FN Screen off</button> <kbd>Select + B</kbd> Exit</span></footer>
+<footer><span id="help"><kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Details <kbd>B</kbd> Back</span><span><button onclick="control('previous')">L1 Previous</button> <button onclick="control('next')">R1 Next</button> <button onclick="control('toggle')">Start Pause / resume</button></span><span><button id="screen-button" onclick="control('screen')" aria-label="Turn screen off; press FN to wake">FN Screen off</button> <kbd id="exit-keys">Select + B</kbd> Exit</span></footer>
 <script>
 const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
@@ -174,17 +191,21 @@ function focusDetail(host,section,page=0){let m=host.metrics,h=host.history;
 let updating=false;
 let viewKey='', renderedAt=0,lastSelection=null,lastPanel=null;
 function render(s){
- const device=s.device??{};
+ const device=s.device??{},deviceName=device.name??'R36',screenKey=device.screen_key??'FN';
+ document.getElementById('device-status').setAttribute('aria-label',deviceName+' handheld status');
+ document.querySelectorAll('#device-status small').forEach((e,i)=>{if(i<3)e.textContent=deviceName+' '+['Temp','CPU','RAM'][i]});
+ document.getElementById('exit-keys').textContent=device.exit_keys??'Select + B';
  document.getElementById('local-temp').textContent=fmt(device.temperature,'°C');
  document.getElementById('local-cpu').textContent=fmt(device.cpu,'%');
  document.getElementById('local-memory').textContent=fmt(device.memory,'%');
  document.getElementById('local-battery').textContent=numeric(device.battery)?device.battery+'%':'—';
  const charging=device.charging, plugged=device.plugged, label=charging?'Charging':plugged?(device.battery_status==='Full'?'Fully charged · plugged in':'Plugged in'):'On battery';
  document.getElementById('local-battery-box').classList.toggle('powered',Boolean(charging||plugged));
- document.getElementById('local-battery-box').setAttribute('aria-label','R36 battery: '+label);
+ document.getElementById('local-battery-box').setAttribute('aria-label',deviceName+' battery: '+label);
  document.getElementById('charge-icon').innerHTML=charging?'<svg viewBox="0 0 16 20" role="img" aria-label="Charging"><path d="M9 0 1 11h6l-1 9 9-12H9z" fill="currentColor"/></svg>':plugged?'<svg viewBox="0 0 20 20" role="img" aria-label="'+label+'"><path d="M6 1v5m8-5v5M4 6h12v3a6 6 0 0 1-12 0zM10 15v4" fill="none" stroke="currentColor" stroke-width="2"/></svg>':'';
 
- document.getElementById('screen-button').textContent=s.screen_off?'FN Wake':'FN Screen off';
+ document.getElementById('screen-button').textContent=screenKey+(s.screen_off?' Wake':' Screen off');
+ document.getElementById('screen-button').setAttribute('aria-label',device.name==='TrimUI'?'Turn screen off; press Y to wake':'Turn screen off; press FN to wake');
  document.body.classList.toggle('device-summary',Boolean(s.detail&&!s.focus));
  document.getElementById('connection').textContent=s.connection;
  document.getElementById('connection').className=s.connection==='Connected'?'':'error';

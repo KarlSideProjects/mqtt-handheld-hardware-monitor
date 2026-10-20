@@ -91,6 +91,8 @@ TrimUI 的 [install-trimui-deps.sh](../browser/install-trimui-deps.sh) 使用 [D
 
 ## TrimUI 按鍵操作
 
+關屏／喚醒鍵以機身標示的 **X 鍵** 為準，對應事件碼 308；沿用目前按鍵設定。
+
 [trimui_monitor.py](../browser/trimui_monitor.py) 依名稱尋找 `TRIMUI Player1`，避免依賴可能變動的 event 節點編號。
 
 | 按鍵 | 操作 |
@@ -100,12 +102,12 @@ TrimUI 的 [install-trimui-deps.sh](../browser/install-trimui-deps.sh) 使用 [D
 | B | 逐層返回，事件碼 304 |
 | L／R | 翻頁或切換上一台／下一台設備 |
 | Start | 在總覽暫停／恢復輪播 |
-| Y | 關閉背光並透過 DRM DPMS 停用顯示，再按一次恢復低亮度畫面；MQTT 繼續接收 |
+| X | 關閉背光並透過 DRM DPMS 停用顯示，再按一次恢復低亮度畫面；MQTT 繼續接收 |
 | Select + Start | 退出監控，回到原廠選單 |
 
-A／B 映射依使用者的實體標籤回報修正；事件注入已確認 305 開啟、304 返回，修正後的完整實體按鍵驗收仍待執行。Y 鍵使用原生 libdrm 的 connector DPMS，在關閉時先將背光設為零，再切換顯示為 Off；喚醒先切回 On，再恢復監控亮度。SDL 呈現與電源切換共用鎖，關屏時停止送出 pageflip。這不會讓 Linux 或 Wi-Fi 進入系統休眠，自動休眠仍由前述設定與旗標停用。喚醒失敗時可再按 Y 重試，退出或啟動失敗時會嘗試恢復顯示與原背光。
+A／B 映射依使用者的實體標籤回報修正；事件注入已確認 305 開啟、304 返回，修正後的完整實體按鍵驗收仍待執行。X 鍵使用原生 libdrm 的 connector DPMS，在關閉時先將背光設為零，再切換顯示為 Off；喚醒先切回 On，再恢復監控亮度。SDL 呈現與電源切換共用鎖，關屏時停止送出 pageflip。這不會讓 Linux 或 Wi-Fi 進入系統休眠，自動休眠仍由前述設定與旗標停用。喚醒失敗時可再按 X 重試，退出或啟動失敗時會嘗試恢復顯示與原背光。
 
-此韌體已實測 DPMS Off 時顯示管線 active=0，喚醒後為 On／active=1；這是驅動狀態證據，實際耗電與各面板電源軌仍未量測。原廠電源鍵還可能影響無線網路，因此本功能使用 Y，不接管電源鍵。介面研究見 [原生顯示研究](native-app-display-research.md#手動關屏與背景監控)。
+此韌體已實測 DPMS Off 時顯示管線 active=0，喚醒後為 On／active=1；這是驅動狀態證據，實際耗電與各面板電源軌仍未量測。原廠電源鍵還可能影響無線網路，因此本功能使用 X，不接管電源鍵。介面研究見 [原生顯示研究](native-app-display-research.md#手動關屏與背景監控)。
 
 ## TrimUI 備份還原
 
@@ -148,7 +150,7 @@ python3 browser/test_trimui_power.py
 ```bash
 # 寫入實機：在 TrimUI 有本專案 browser 原始碼的目錄執行。
 python3 measure_trimui_input.py
-# 寫入實機：三輪 Y 關屏／喚醒，第一輪保持關屏 12 秒；需有即時 MQTT 資料。
+# 寫入實機：三輪 X 關屏／喚醒，第一輪保持關屏 12 秒；需有即時 MQTT 資料。
 python3 test_trimui_screen.py
 # 寫入實機並退出：31 是此設備進入監控前的背光原值。
 python3 test_trimui_exit.py --expected-brightness 31
@@ -156,6 +158,6 @@ python3 test_trimui_exit.py --expected-brightness 31
 
 最後一輪退出耗時 1.85 秒。退出測試確認回到原廠選單、恢復背光 31、原生瀏覽器橋接結束，臨時掛載與鎖定目錄清空。防休眠設定保留。實測資料由 [SDL 驗證紀錄](evidence/trimui-sdl-2026-10-20.json) 保存；[Xorg 實驗紀錄](evidence/trimui-chromium-2026-10-20.json) 與 [Cog 黑屏紀錄](evidence/trimui-black-screen-2026-10-20.json) 保留為失敗案例。
 
-Y 鍵三輪關屏／喚醒測試通過，第一輪關屏保持 12 秒，超過主機資料的 10 秒過期門檻，MQTT 與三台主機持續在線。關屏時 DPMS Off、CRTC active=0、背光為零；喚醒恢復 On／active=1。從關屏狀態直接退出耗時 2.36 秒，恢復原廠選單、背光 31 並釋放瀏覽器、掛載與鎖。加入關屏協調後，方向鍵數位顯示延遲回歸測試五次約為 203 至 237 毫秒。完整數值見 [關屏驗證紀錄](evidence/trimui-screen-power-2026-10-20.json)。此測試使用事件注入，尚未收到更新後實體 Y 鍵的使用者確認。
+X 鍵三輪關屏／喚醒測試通過，第一輪關屏保持 12 秒，超過主機資料的 10 秒過期門檻，MQTT 與三台主機持續在線。關屏時 DPMS Off、CRTC active=0、背光為零；喚醒恢復 On／active=1。從關屏狀態直接退出耗時 2.36 秒，恢復原廠選單、背光 31 並釋放瀏覽器、掛載與鎖。加入關屏協調後，方向鍵數位顯示延遲回歸測試五次約為 203 至 237 毫秒。完整數值見 [關屏驗證紀錄](evidence/trimui-screen-power-2026-10-20.json)。此三輪測試使用事件注入；使用者已確認此功能對應機身 X 鍵，完整實體按鍵操作矩陣仍待驗收。
 
 長時間穩定性、耗電、重新開機後防休眠及全部實體按鍵操作，仍需驗證。

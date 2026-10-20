@@ -64,7 +64,7 @@
 
 ## R36 MAX 2 按鍵操作
 
-TrimUI 使用 Y 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimUI 按鍵操作](docs/installation.md#trimui-按鍵操作)。
+TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimUI 按鍵操作](docs/installation.md#trimui-按鍵操作)。
 
 兩支類比搖桿皆可使用，具有中心死區，長推會連續移動。斜推依偏移較大的方向移動。
 

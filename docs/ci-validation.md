@@ -138,7 +138,7 @@ CI 整合仍是草案，建議依序執行：
 
 待機測試要超過設備原本的自動休眠計時，並持續確認資料及畫面更新。TrimUI 原設定及防休眠機制見 [安裝前關閉自動休眠](installation.md#安裝前關閉-trimui-自動休眠)；僅檢查旗標存在不算長時間測試。重新開機後仍須重測，確認開機入口真正生效。
 
-[test_trimui_screen.py](../browser/test_trimui_screen.py) 在實機注入 Y，檢查背光、DPMS、CRTC active、喚醒與關屏時 MQTT 持續更新。這是驅動及事件路徑測試，實體熄滅／恢復與省電幅度仍須目視、相機或供電量測；不能只因 API 回報 Off 就宣稱面板所有電源已關閉。
+[test_trimui_screen.py](../browser/test_trimui_screen.py) 在實機注入 X，檢查背光、DPMS、CRTC active、喚醒與關屏時 MQTT 持續更新。這是驅動及事件路徑測試，實體熄滅／恢復與省電幅度仍須目視、相機或供電量測；不能只因 API 回報 Off 就宣稱面板所有電源已關閉。
 
 功能測試還要涵蓋 MQTT 斷線重連、退出回原廠選單、背光恢復、再次啟動及重複安裝。兩台設備的按鍵與手動關屏機制不同，必須分開驗收。
 

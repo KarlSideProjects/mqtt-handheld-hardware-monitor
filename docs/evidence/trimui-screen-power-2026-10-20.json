@@ -23,10 +23,10 @@
       "online_hosts": 3
     }
   ],
-  "scope": "evdev Y, DPMS, CRTC, backlight, live MQTT; not optical or electrical",
+  "scope": "evdev code 308, DPMS, CRTC, backlight, live MQTT; not optical or electrical",
   "date": "2026-10-20",
   "device": "TrimUI Smart Pro S",
-  "method": "evdev Y (308), native libdrm legacy DSI connector DPMS; no system suspend",
+  "method": "evdev code 308 (physical X), native libdrm legacy DSI connector DPMS; no system suspend",
   "dpms_off": "Off",
   "crtc_active_while_off": 0,
   "backlight_while_off": 0,
@@ -61,5 +61,7 @@
     "dpms": "On",
     "brightness": 16
   },
-  "deployed_source_matches": true
+  "deployed_source_matches": true,
+  "physical_button_label": "X",
+  "button_label_source": "User corrected the physical key label to X; event code 308 and device configuration unchanged"
 }

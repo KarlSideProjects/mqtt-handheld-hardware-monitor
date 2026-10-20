@@ -184,7 +184,7 @@ Windows：使用「系統管理員」PowerShell 執行。
 irm https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/refs/heads/master/bootstrap.ps1 -ErrorAction Stop | iex
 ```
 
-PVE 安裝模組會準備本機節點名稱與服務可讀的 CA，API token 仍需自行建立並填入 `/etc/hwmonitor-mqtt/pve.env`。缺少有效設定或存在舊 `sys-agent` 容器時，入口會停止。看到 `PVE sender is not installed yet` 代表本次採集服務尚未安裝完成。填好設定後重跑同一下載命令；舊 Docker sender 的遷移與回復步驟見[採集端安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+PVE 安裝模組會準備本機節點名稱與服務可讀的 CA；缺少 token 時透過本機 `pveum` 建立專用 PVE 帳號、分離權限的唯讀 token 與 ACL，將密鑰直接存入權限為 `0600` 的 `/etc/hwmonitor-mqtt/pve.env`。既有實際設定沿用，不顯示或重設密鑰。存在舊 `sys-agent` 容器或驗證失敗時，入口會停止。完整操作、設定變更、遷移與回復步驟見[安裝檔會做什麼](https://github.com/KarlSideProjects/hwmonitor-mqtt#安裝檔會做什麼)。
 
 若 PVE 企業套件庫回傳 `401 Unauthorized`，下載後的 bootstrap 會提示索引更新失敗，再嘗試安裝缺少的必要套件；必要套件仍無法安裝時就會停止。此流程保留原有套件庫設定及 APT 驗證；企業庫授權需求見 [Proxmox 官方說明](https://pve.proxmox.com/wiki/Package_Repositories#sysadmin_enterprise_repo)。
 

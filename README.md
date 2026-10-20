@@ -185,7 +185,7 @@ bash install.sh --dry-run
 sudo bash install.sh
 ```
 
-PVE 預設使用原生 systemd，也可選擇 Docker。PVE 必須先準備好 `/etc/hwmonitor-mqtt/pve.env` 與可信 CA，再以 sudo 執行 dry-run 和安裝命令。設定檔及 CA 的建立方式、權限與 API 權限需求，請看[採集端 PVE 安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+PVE 預設使用原生 systemd，也可選擇 Docker。PVE 必須先準備好 `/etc/hwmonitor-mqtt/pve.env` 與可信 CA，再以 root 執行 dry-run 和安裝命令；若已用 `root` 登入，可省略命令中的 `sudo`。設定檔及 CA 的建立方式、權限與 API 權限需求，請看[採集端 PVE 安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
 
 ## 安裝到掌機
 

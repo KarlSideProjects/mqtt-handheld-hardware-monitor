@@ -57,6 +57,8 @@ MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我�
 
 安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
 
+[PVE、CT／VM 監控研究與模組化規劃](docs/pve-monitoring-research.md)涵蓋系統辨識、平台安裝模組及父子資源瀏覽，目前為提案，尚未實作。
+
 ## 看圖開啟與操作
 
 先完成安裝，從遊戲機原有選單開啟。點圖可放大；完整步驟與按鍵速查見 [遊戲機操作圖解](docs/device-controls.md)。

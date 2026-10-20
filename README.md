@@ -175,7 +175,18 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 Linux／PVE：使用 root 終端執行；一般 Linux 可先執行 `sudo -i`。
 
 ```bash
-(tmp=$(mktemp) && (command -v curl >/dev/null || (apt-get update && apt-get install -y curl)) && curl -fsSL https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.sh -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status")
+(tmp=$(mktemp) && (
+  if ! command -v curl >/dev/null; then
+    if ! apt-get install -y curl; then
+      echo "Warning: installing curl from current APT metadata/cache failed; refreshing indexes and retrying." >&2
+      if ! apt-get update; then
+        echo "Warning: APT index refresh failed; retrying curl install with existing signed metadata/cache." >&2
+      fi
+      apt-get install -y curl || exit $?
+    fi
+  fi
+  curl -fsSL https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.sh -o "$tmp" && bash "$tmp"
+); status=$?; rm -f "$tmp"; exit "$status")
 ```
 
 Windows：使用「系統管理員」PowerShell 執行。
@@ -185,6 +196,8 @@ $ErrorActionPreference='Stop'; $p=Join-Path $env:TEMP ('hwmonitor-mqtt-'+[guid]:
 ```
 
 PVE 需提供唯讀 API token 與可信 CA；缺少設定時，入口會建立私有設定範本並停止，完成設定後重跑同一命令。平台依賴、設定位置與驗證限制請看[採集端安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+
+若 PVE 企業套件庫回傳 `401 Unauthorized`，入口會先嘗試從現有套件索引安裝 curl；更新索引失敗時會提示，再重試必要套件。必要套件仍無法安裝時就會停止。此流程保留原有套件庫設定及 APT 驗證；企業庫授權需求見 [Proxmox 官方說明](https://pve.proxmox.com/wiki/Package_Repositories#sysadmin_enterprise_repo)。
 
 ## 安裝到掌機
 

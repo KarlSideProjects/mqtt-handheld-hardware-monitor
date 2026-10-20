@@ -77,6 +77,9 @@ const server=http.createServer((req,res)=>{
   guest.disk_io.total.rate={read_bytes_per_s:2**35,write_bytes_per_s:1023*2**20};
   guest.history=Array.from({length:30},(_,i)=>({cpu:20+i,ram:60+i/2,rx:1e6+i*1e4,tx:2e6,read:3e6,write:1e6}));
   await page.reload();await page.locator('.pve-detail').waitFor();await fits();
+  const readingGeometry=await page.locator('.pve-detail').evaluate(e=>{const chartTop=e.querySelector('.pve-trends').getBoundingClientRect().top;return [...e.querySelectorAll('.pve-reading')].map(card=>{const box=card.getBoundingClientRect(),label=card.querySelector('small').getBoundingClientRect(),value=card.querySelector('strong').getBoundingClientRect(),style=getComputedStyle(card);return {bottom:box.bottom,chartTop,labelBottom:label.bottom,valueTop:value.top,valueBottom:value.bottom,innerBottom:box.bottom-parseFloat(style.paddingBottom)}})});
+  assert.ok(readingGeometry.every(x=>x.bottom<=x.chartTop+1),`Guest reading cards overlap trend charts: ${JSON.stringify(readingGeometry)}`);
+  assert.ok(readingGeometry.every(x=>x.labelBottom<=x.valueTop&&x.valueBottom<=x.innerBottom+1),`Guest reading text exceeds its card: ${JSON.stringify(readingGeometry)}`);
   const largeFlows=await page.locator('.pve-reading strong').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
   assert.ok(largeFlows.every(x=>x.scroll<=x.width+1),'Large guest I/O readings must retain their units without clipping');
   await page.screenshot({path:path.join(root,'pve-detail-preview.png')});

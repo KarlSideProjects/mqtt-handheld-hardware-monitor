@@ -2,7 +2,6 @@
 import math
 import time
 
-MAX_GUESTS = 512
 MAX_TEXT = 128
 FRESH_SECONDS = 30
 
@@ -104,7 +103,7 @@ def apply_virtualization(raw, previous=None):
         if observed is None:
             raise ValueError('Successful PVE observation needs a timestamp')
         guests = raw.get('guests')
-        if not isinstance(guests, list) or len(guests) > MAX_GUESTS:
+        if not isinstance(guests, list):
             raise ValueError('Invalid PVE inventory')
         parsed = [_guest(item, cluster_id, node) for item in guests]
         ids = [item['id'] for item in parsed]

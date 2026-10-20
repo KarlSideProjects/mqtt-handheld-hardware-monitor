@@ -54,6 +54,17 @@ mixed_view = mixed.snapshot()
 assert mixed_view['detail'] == 'ordinary' and mixed_view['panel'] == 'cpu'
 assert mixed_view['focus'] is None and mixed_view['pve_view'] is None
 
+# The transport's 256 KiB payload bound, rather than an arbitrary guest cap, limits inventories.
+large = json.loads(json.dumps(message))
+large['virtualization']['guests'] = [
+    dict(large['virtualization']['guests'][0], id=f'lab:qemu:{vmid}', vmid=vmid, name=f'guest-{vmid}')
+    for vmid in range(1000, 1513)]
+large_payload = json.dumps(large)
+assert len(large_payload) <= 262144
+large_receiver = Monitor()
+assert large_receiver.receive('sys/agents/pve-node-a/metrics', large_payload, now=now)
+assert large_receiver.snapshot()['hosts'][0]['virtualization']['guest_count'] == 513
+
 # Invalid complete inventories cannot erase a previously accepted list.
 broken = json.loads(json.dumps(message))
 broken['virtualization']['guests'][1]['id'] = 'wrong:id'

@@ -327,8 +327,9 @@ class Monitor:
                 elif action in ('up', 'down') and guests:
                     self.pve_index = (self.pve_index + (1 if action == 'down' else -1)) % len(guests)
                     self.pve_guest_id = guests[self.pve_index]['id']
-                elif action in ('previous', 'next'):
-                    self.pve_index = max(0, min(max(0, len(guests) - 1), self.pve_index + (-4 if action == 'previous' else 4)))
+                elif action in ('left', 'right', 'previous', 'next'):
+                    previous = action in ('left', 'previous')
+                    self.pve_index = max(0, min(max(0, len(guests) - 1), self.pve_index + (-4 if previous else 4)))
                     self.pve_guest_id = guests[self.pve_index]['id'] if guests else None
                 else:
                     return

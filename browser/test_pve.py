@@ -46,6 +46,11 @@ state.action('next', now)
 assert state.snapshot()['pve_page'] == 1
 state.action('previous', now)
 assert state.snapshot()['pve_page'] == 0
+state.action('right', now)
+assert state.snapshot()['pve_page'] == 1
+state.action('left', now)
+assert state.snapshot()['pve_page'] == 0
+assert state.snapshot()['pve_selected'] == 0
 state.action('back', now)
 assert state.snapshot()['pve_view'] is None and state.snapshot()['detail'] == 'pve-node-a'
 

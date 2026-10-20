@@ -256,6 +256,39 @@ with tempfile.TemporaryDirectory() as temp:
         assert (result.returncode == 0) == success
 print('PASS: dependency bootstrap accepts the pinned digest and rejects corrupted downloads')
 
+# A stale empty lock directory from an earlier runtime must recover after reboot.
+with tempfile.TemporaryDirectory() as temp:
+    root = Path(temp) / 'rootfs'
+    (root / 'usr/bin').mkdir(parents=True)
+    (root / 'usr/bin/env').touch()
+    (root / '.mount-lock').mkdir()
+    helper = str(Path(__file__).with_name('trimui-rootfs.sh').resolve())
+    result = subprocess.run(['bash', helper, '--preflight', str(root)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert (root / '.mount-lock').is_file(), 'preflight must retain the flock inode'
+    assert not (root / '.mount-lock').is_dir()
+    lock = root / '.mount-lock'
+    with lock.open('a') as held:
+        import fcntl
+        fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        result = subprocess.run(['bash', helper, '--preflight', str(root)], capture_output=True, text=True)
+        assert result.returncode != 0 and 'already mounted' in result.stderr
+    lock.unlink()
+    lock.mkdir()
+    (lock / 'unknown').write_text('preserve')
+    result = subprocess.run(['bash', helper, '--preflight', str(root)], capture_output=True, text=True)
+    assert result.returncode != 0 and (lock / 'unknown').read_text() == 'preserve'
+    lock.rename(root / '.saved-lock')
+    mountinfo = Path(temp) / 'mountinfo'
+    mountinfo.write_text(f'1 0 0:1 / {root}/proc rw - proc proc rw\n')
+    result = subprocess.run(['bash', helper, '--preflight', str(root)],
+                            env=dict(os.environ, TRIMUI_MOUNTINFO=str(mountinfo)), capture_output=True, text=True)
+    assert result.returncode != 0 and (root / '.saved-lock').is_dir()
+    result = subprocess.run(['bash', helper, '--preflight', str(root)],
+                            env=dict(os.environ, TRIMUI_MOUNTINFO=str(mountinfo / 'missing')), capture_output=True, text=True)
+    assert result.returncode != 0 and (root / '.saved-lock').is_dir()
+print('PASS: stale empty TrimUI mount marker recovers through shared preflight')
+
 # Both handheld installers must stage and verify the receiver module and its renderer.
 for name in ('install.sh', 'install-trimui.sh'):
     installer = Path(__file__).with_name(name).read_text()

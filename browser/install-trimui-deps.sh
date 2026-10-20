@@ -15,11 +15,11 @@ main() {
     runtime=${1:?Runtime directory required}
     [[ $(id -u) == 0 && $(uname -m) == aarch64 ]] || { echo 'Requires root on ARM64 TrimUI.' >&2; exit 1; }
     bash "$source_dir/trimui-awake.sh" --persist
-    for command in curl sha256sum tar mount umount chroot python3; do command -v "$command" >/dev/null; done
-    [[ ! -d $runtime/rootfs/.mount-lock ]] || { echo 'Exit the monitor before updating runtime.' >&2; exit 1; }
+    for command in curl sha256sum tar mount umount chroot python3 flock; do command -v "$command" >/dev/null; done
     umask 077
     mkdir -p "$runtime"
     root=$runtime/rootfs
+    if [[ -d $root ]]; then bash "$source_dir/trimui-rootfs.sh" --preflight "$root"; fi
     if [[ ! -x $root/usr/bin/apt-get ]]; then
         available=$(df -Pk "$runtime" | awk 'END {print $4}')
         ((available >= 1500000)) || { echo 'At least 1.5 GB free internal storage is required.' >&2; exit 1; }

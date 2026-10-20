@@ -41,6 +41,19 @@ assert state.snapshot()['pve_page'] == 0
 state.action('back', now)
 assert state.snapshot()['pve_view'] is None and state.snapshot()['detail'] == 'pve-node-a'
 
+# Switching from the PVE host to an ordinary host clears the PVE-only card index.
+mixed = Monitor()
+assert mixed.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+assert mixed.receive('sys/agents/ordinary/metrics', json.dumps({'host': 'ordinary', 'ts': time.time()}), now=now)
+mixed.action('detail', now)
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    mixed.action(direction, now)
+assert mixed.snapshot()['panel'] == 'pve'
+mixed.action('next', now)
+mixed_view = mixed.snapshot()
+assert mixed_view['detail'] == 'ordinary' and mixed_view['panel'] == 'cpu'
+assert mixed_view['focus'] is None and mixed_view['pve_view'] is None
+
 # Invalid complete inventories cannot erase a previously accepted list.
 broken = json.loads(json.dumps(message))
 broken['virtualization']['guests'][1]['id'] = 'wrong:id'

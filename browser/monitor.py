@@ -244,6 +244,10 @@ class Monitor:
                 self.focus = None
                 self.pve_view = None
                 self.panel = 0
+            elif self.panel >= len(SECTIONS) and not self.hosts[self.detail].get('virtualization'):
+                self.panel = 0
+                self.focus = None
+                self.pve_view = None
             if self.selected not in self.hosts:
                 self.selected = order[0] if order else None
             if not self.paused and order and now - self.last_page >= 15:
@@ -316,6 +320,10 @@ class Monitor:
                 elif action in ('previous', 'next') and self.detail is not None:
                     self.selected = order[(index + (1 if action == 'next' else -1)) % len(order)]
                     self.detail = self.selected
+                    if self.panel >= len(SECTIONS) and not self.hosts[self.detail].get('virtualization'):
+                        self.panel = 0
+                        self.focus = None
+                    self.pve_view = None
                     self.item_page = self.scroll = 0
                 elif action in ('previous', 'next'):
                     pages = (len(order) + 2) // 3

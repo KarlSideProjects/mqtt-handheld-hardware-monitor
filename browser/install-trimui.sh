@@ -50,7 +50,7 @@ PYTHONPATH="$runtime/python${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import webso
 if ((deps_only)); then echo 'PASS: all TrimUI runtime dependencies installed; MQTT setup not requested.'; exit; fi
 if ((check)); then
     bash "$source_dir/trimui-awake.sh" --check
-    [[ -s $base/app/trimui_monitor.py && -x $menu/launch.sh && -s $menu/config.json ]] || fail 'Application not installed.'
+    [[ -s $base/app/trimui_monitor.py && -s $base/app/pve.py && -s $base/app/pve.js && -x $menu/launch.sh && -s $menu/config.json ]] || fail 'Application not installed.'
     [[ -f $base/mqtt-config.json ]] || fail 'Private MQTT config missing.'
     PYTHONPATH="$base/app" python3 -c 'from trimui_monitor import gamepad; gamepad()'
     PYTHONPATH="$source_dir" python3 - "$base/mqtt-config.json" <<'PY'
@@ -63,7 +63,7 @@ PY
     echo 'PASS: files, platform, runtime, gamepad and config. Display/MQTT operation still needs launch verification.'
     exit
 fi
-for file in monitor.py monitor.html trimui_monitor.py trimui-launch.sh trimui-awake.sh mqtt_setup.py assets/hardware-buddy.svg assets/hardware-buddy.png; do
+for file in monitor.py pve.py pve.js monitor.html trimui_monitor.py trimui-launch.sh trimui-awake.sh mqtt_setup.py assets/hardware-buddy.svg assets/hardware-buddy.png; do
     [[ -f $source_dir/$file ]] || fail "Missing source: $file"
 done
 umask 077
@@ -87,7 +87,7 @@ else
 fi
 printf 'Private backup (contains credentials): %s\n' "$backup"
 mkdir -p "$work/app/assets"
-for file in monitor.py monitor.html trimui_monitor.py trimui-awake.sh mqtt_setup.py; do cp "$source_dir/$file" "$work/app/$file"; done
+for file in monitor.py pve.py pve.js monitor.html trimui_monitor.py trimui-awake.sh mqtt_setup.py; do cp "$source_dir/$file" "$work/app/$file"; done
 cp "$source_dir/assets/hardware-buddy.svg" "$work/app/assets/"
 # Replace whole directories so removed files do not survive an update.
 if [[ $(cd -- "$runtime" && pwd) != "$base/runtime" ]]; then

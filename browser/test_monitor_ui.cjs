@@ -4,6 +4,10 @@ const vm = require('node:vm');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, 'monitor.html'), 'utf8')
   .split('<script>')[1].split('let updating=false;')[0];
+const pve = fs.readFileSync(path.join(__dirname, 'pve.js'), 'utf8');
+const context = {};
+context.window = context;
+vm.runInNewContext(pve, context);
 vm.runInNewContext(source + `
 if (esc('<script>') !== '&lt;script&gt;') throw Error('Unsafe host');
 if (fmt(null, '%') !== '—') throw Error('Missing metric shown as zero');
@@ -28,5 +32,10 @@ if(mainVram([gpu,{memory_total_mb:0}])!==gpu) throw Error('Wrong overview GPU');
 sample.metrics.gpus=[{usage_percent:20,memory_used_mb:8192,memory_total_mb:16384},{usage_percent:95,memory_used_mb:1024,memory_total_mb:4096}];
 if(!detail(sample).includes('1.0 / 4.0 GiB') || !detail(sample).includes('8.0 / 16.0 GiB') || !detail(sample).includes('95.0%') || !detail(sample).includes('20.0%')) throw Error('Per-GPU load or VRAM missing');
 if(!flowReading('Read',2**31).includes('GiB/s') || flowReading('Read',null).includes('NaN')) throw Error('Invalid flow units or missing data');
-`, {});
+let guest={type:'qemu',vmid:100,name:'<img src=x>',status:'running',cpu:{percent_total:25},memory:{ram:{percent:25,used:536870912,total:2147483648}}};
+let guestHtml=PVEView.render({provider:'pve',fresh:true,guests:[guest]},0,0,{esc,fmt,bytes});
+if(guestHtml.includes('<img') || !guestHtml.includes('&lt;img') || !guestHtml.includes('VM 100') || !guestHtml.includes('PVE')) throw Error('Unsafe or incomplete PVE guest list');
+if(!PVEView.render({status:'error'},0,0,{esc,fmt,bytes}).includes('Guest inventory unavailable')) throw Error('Missing PVE unknown inventory state');
+if(!PVEView.render({status:'unconfigured'},0,0,{esc,fmt,bytes}).includes('not configured yet')) throw Error('Missing PVE setup state');
+`, context);
 console.log('PASS: host escaping, missing metrics, top 4 of 32 cores, all metric categories, sparse history, VRAM');

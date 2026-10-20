@@ -23,5 +23,11 @@ with ThreadingHTTPServer(('127.0.0.1', 0), handler(state)) as server:
     assert json.loads(response.readline().decode()[6:])['selected'] == 'two'
     assert time.monotonic() - started < .2, 'Input waited for polling heartbeat'
     conn.close()
+    conn = http.client.HTTPConnection(*server.server_address, timeout=2)
+    conn.request('GET', '/pve.js')
+    response = conn.getresponse()
+    assert response.status == 200 and response.getheader('Content-Type').startswith('application/javascript')
+    assert b'PVEView' in response.read()
+    conn.close()
     server.shutdown()
 print('PASS: SSE initial state and immediate input notification')

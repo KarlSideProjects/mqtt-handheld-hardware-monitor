@@ -35,12 +35,63 @@ assert state.snapshot()['pve_view'] == 'guests'
 assert state.snapshot()['hosts'][0]['virtualization']['guest_count'] == 5
 state.action('down', now)
 assert state.snapshot()['pve_selected'] == 1
+state.action('detail', now)
+assert state.snapshot()['pve_view'] == 'guest'
+assert state.snapshot()['pve_guest_id'] == 'lab:lxc:101'
+state.action('next', now)
+assert state.snapshot()['pve_guest_id'] == 'lab:qemu:102'
+state.action('back', now)
+assert state.snapshot()['pve_view'] == 'guests' and state.snapshot()['pve_selected'] == 2
 state.action('next', now)
 assert state.snapshot()['pve_page'] == 1
 state.action('previous', now)
 assert state.snapshot()['pve_page'] == 0
 state.action('back', now)
 assert state.snapshot()['pve_view'] is None and state.snapshot()['detail'] == 'pve-node-a'
+
+# Public A/B navigation and lifecycle recovery keep the selected guest in its parent context.
+life = Monitor()
+assert life.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+life.action('detail', now)  # overview -> host detail
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    life.action(direction, now)
+life.action('detail', now)  # host detail -> guest list
+life.action('detail', now)  # selected guest -> guest detail
+assert life.snapshot()['pve_view'] == 'guest' and life.snapshot()['pve_guest_id'] == 'lab:qemu:100'
+deleted = json.loads(json.dumps(message))
+deleted['virtualization']['observed_at'] += 1
+deleted['virtualization']['guests'] = [g for g in deleted['virtualization']['guests'] if g['id'] != 'lab:qemu:100']
+assert life.receive('sys/agents/pve-node-a/metrics', json.dumps(deleted), now=now + 1)
+assert life.snapshot()['pve_view'] == 'guests'
+assert life.snapshot()['pve_guest_id'] in {g['id'] for g in life.snapshot()['hosts'][0]['virtualization']['guests']}
+life.action('detail', now + 1)
+assert life.snapshot()['pve_view'] == 'guest'
+life.action('back', now + 11)
+assert life.snapshot()['detail'] is None and life.snapshot()['pve_view'] is None
+
+# Only a newly observed successful inventory adds guest trend samples.
+sample_state = Monitor()
+assert sample_state.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+initial_guest = sample_state.snapshot()['hosts'][0]['virtualization']['guests'][0]
+assert len(initial_guest['history']) == 1
+assert sample_state.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 1)
+assert len(sample_state.snapshot()['hosts'][0]['virtualization']['guests'][0]['history']) == 1
+newer = json.loads(json.dumps(message))
+newer['virtualization']['observed_at'] += 1
+newer['virtualization']['guests'][0]['cpu']['percent_total'] = 40
+assert sample_state.receive('sys/agents/pve-node-a/metrics', json.dumps(newer), now=now + 2)
+trend = sample_state.snapshot()['hosts'][0]['virtualization']['guests'][0]['history']
+assert len(trend) == 2 and trend[-1]['cpu'] == 40
+
+for initial_status in ('unconfigured', 'error'):
+    pending = Monitor()
+    pending_envelope = dict(version=1, provider='pve', cluster_id=None if initial_status == 'unconfigured' else 'lab',
+                            node=None if initial_status == 'unconfigured' else 'pve-node-a',
+                            observed_at=None, status=initial_status)
+    assert pending.receive('sys/agents/pve-node-a/metrics', json.dumps(dict(host='pve-node-a', ts=time.time(),
+                                                                          virtualization=pending_envelope)), now=now)
+    assert pending.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 1)
+    assert len(pending.snapshot()['hosts'][0]['virtualization']['guests'][0]['history']) == 1
 
 # Switching from the PVE host to an ordinary host clears the PVE-only card index.
 mixed = Monitor()

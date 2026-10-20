@@ -112,6 +112,20 @@ def apply_virtualization(raw, previous=None):
         if (previous and previous.get('cluster_id') == cluster_id and previous.get('node') == node
                 and previous.get('observed_at') is not None and observed < previous['observed_at']):
             return previous
+        previous_guests = {item['id']: item for item in (previous or {}).get('guests', [])}
+        previous_observed = (previous or {}).get('observed_at')
+        is_new_observation = previous_observed is None or observed > previous_observed
+        for item in parsed:
+            prior_guest = previous_guests.get(item['id'], {})
+            history = list(prior_guest.get('history', [])) if prior_guest.get('node') == item['node'] else []
+            if is_new_observation:
+                history.append({'observed_at': observed, 'cpu': item['cpu']['percent_total'],
+                                'ram': item['memory']['ram']['percent'],
+                                'rx': item['network_io']['total']['rate']['rx_bytes_per_s'],
+                                'tx': item['network_io']['total']['rate']['tx_bytes_per_s'],
+                                'read': item['disk_io']['total']['rate']['read_bytes_per_s'],
+                                'write': item['disk_io']['total']['rate']['write_bytes_per_s']})
+            item['history'] = history[-60:]
         result.update(observed_at=observed, guests=parsed)
     else:
         if previous and (cluster_id is None or previous.get('cluster_id') == cluster_id and previous.get('node') == node):

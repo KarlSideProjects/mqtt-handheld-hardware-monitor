@@ -55,8 +55,29 @@ const server=http.createServer((req,res)=>{
   state.hosts=[pveHost];state.selected='pve-node-a';state.detail=null;state.focus=null;await page.reload();await page.locator('article').first().waitFor();await fits();assert.ok((await page.locator('.host-caption').textContent()).includes('PVE 5'));
   state.detail='pve-node-a';state.panel='pve';await page.reload();await page.locator('.pve-entry').waitFor();await fits();assert.equal(await page.locator('.detail-grid>.panel').count(),8);assert.ok(await page.locator('.pve-entry').evaluate(e=>e.classList.contains('selected')));
   state.pve_view='guests';state.pve_page=0;state.pve_selected=0;await page.reload();await page.locator('.pve-row').first().waitFor();await fits();assert.equal(await page.locator('.pve-row').count(),4);assert.ok((await page.locator('.pve-row').first().textContent()).includes('VM 100'));const ram=page.locator('.pve-memory').first();assert.equal((await ram.textContent()).trim(),'RAM 25.0% · 0.5 GiB / 2.0 GiB · PVE');const ramBox=await ram.evaluate(e=>({width:e.clientWidth,scroll:e.scrollWidth,overflow:getComputedStyle(e).textOverflow}));assert.ok(ramBox.width>0&&ramBox.scroll<=ramBox.width+1&&ramBox.overflow!=='ellipsis',`PVE RAM text clipped: ${JSON.stringify(ramBox)}`);
+  const listText=await page.locator('.pve-row').first().evaluate(e=>[...e.children].map(x=>({size:parseFloat(getComputedStyle(x).fontSize),width:x.clientWidth,scroll:x.scrollWidth})));
+  assert.ok(listText.every(x=>x.size>=24),'Guest list text must be readable at a distance');
+  assert.ok(listText[3].size>=30&&listText[4].size>=26,'Emphasize guest list CPU and RAM');
+  assert.ok([0,3,4].every(i=>listText[i].scroll<=listText[i].width+1),'Guest IDs and readings must not be clipped');
+  await page.screenshot({path:path.join(root,'pve-list-preview.png')});
   state.pve_page=1;state.pve_selected=4;await page.reload();await page.locator('.pve-row').first().waitFor();await fits();assert.equal(await page.locator('.pve-row').count(),1);assert.ok((await page.locator('.pve-row').first().textContent()).includes('guest-104'));
   const guest=pveHost.virtualization.guests[0];guest.name='Long PVE guest name '.repeat(7);guest.memory.ram={percent:123.4,used:9000*2**30,total:10000*2**30};guest.history=[{cpu:25,ram:123.4,rx:1e6,tx:null,read:512,write:null},{cpu:null,ram:null,rx:null,tx:null,read:null,write:null},{cpu:40,ram:120,rx:2e6,tx:null,read:1024,write:null}];state.pve_view='guest';state.pve_selected=0;state.pve_guest_id=guest.id;await page.reload();await page.locator('.pve-detail').waitFor();await fits();assert.ok((await page.locator('.pve-title').textContent()).includes('Long PVE guest name'));assert.ok((await page.locator('.pve-memory-reading strong').textContent()).includes('9000.0 GiB / 10000.0 GiB'));assert.equal(await page.locator('.pve-trend svg').first().locator('polyline').count(),2);const readings=await page.locator('.pve-reading strong').evaluateAll(es=>es.map(e=>({text:e.textContent,width:e.clientWidth,scroll:e.scrollWidth})));assert.ok(readings.every(x=>x.width>0&&x.scroll<=x.width+1),`PVE metric clipped: ${JSON.stringify(readings)}`);
+  const emphasis=await page.locator('.pve-detail').evaluate(e=>({
+   readings:e.querySelector('.pve-readings').getBoundingClientRect().height,
+   charts:e.querySelector('.pve-trends').getBoundingClientRect().height,
+   sizes:[...e.querySelectorAll('.pve-reading strong')].map(x=>parseFloat(getComputedStyle(x).fontSize))
+  }));
+  assert.ok(emphasis.readings>=2*emphasis.charts,'Guest numbers must occupy more space than trends');
+  assert.ok(emphasis.sizes.slice(0,2).every(x=>x>=56),'CPU and vCPU must be readable at a distance');
+  assert.ok(emphasis.sizes.slice(2).every(x=>x>=32),'RAM and I/O must use large readings');
+  assert.equal(await page.locator('.pve-trend svg').count(),6,'Retain all guest trend charts');
+  guest.network_io.total.rate={rx_bytes_per_s:1023*2**20,tx_bytes_per_s:2**35};
+  guest.disk_io.total.rate={read_bytes_per_s:2**35,write_bytes_per_s:1023*2**20};
+  guest.history=Array.from({length:30},(_,i)=>({cpu:20+i,ram:60+i/2,rx:1e6+i*1e4,tx:2e6,read:3e6,write:1e6}));
+  await page.reload();await page.locator('.pve-detail').waitFor();await fits();
+  const largeFlows=await page.locator('.pve-reading strong').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
+  assert.ok(largeFlows.every(x=>x.scroll<=x.width+1),'Large guest I/O readings must retain their units without clipping');
+  await page.screenshot({path:path.join(root,'pve-detail-preview.png')});
   if(actual){for(const item of actual.hosts){state.detail=item.host;state.hosts=[item];state.selected=item.host;await page.reload();await page.locator('.detail-grid').waitFor();await fits();for(const section of ['cpu','gpu','memory','network','disks','temperatures','history']){state.focus=section;await page.reload();await page.waitForFunction(()=>document.getElementById('main').innerHTML.length>0);await fits()}state.focus=null}}
   assert.deepEqual(errors,[]);console.log(`PASS: ${viewport.width}×${viewport.height}, no scrolling or clipping, distance readings 64/48px, drill-down cores, 0/2/4 GPUs, three-host overview`);
  }finally{await browser.close();server.closeAllConnections();server.close()}

@@ -75,6 +75,16 @@ PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝�
 
 </details>
 
+## Docker 容器監測
+
+支援「主機 → Docker containers → 個別容器」，查看執行狀態、CPU、RAM、網路／磁碟 I/O 及最近 60 次觀測趨勢。同一主機可同時顯示 CT／VM 與 Docker 入口。A 逐層進入、B 返回，清單用上下選取、左右分頁，詳情用 L1／R1 切換同一宿主的容器。
+
+Docker CPU 以每核心 100% 計算，多核心可超過 100%；RAM 標示 Cache excluded。停止的容器保留在清單，Daemon 故障顯示 API error，最後成功觀測超過 30 秒顯示過期。缺少的指標以橫線表示，容器不占用頂層電腦名額。
+
+需更新 Linux 採集端並明確啟用 Docker 監測，參考 [採集端啟用與權限說明](https://github.com/KarlSideProjects/hwmonitor-mqtt/blob/master/docs/deployment/docker-profiles.md#監測-docker-容器)。Docker socket 具管理權限，採集器僅使用 GET，但不會自動修改 socket 權限或授予存取權。
+
+本機 Docker Engine 到接收端的唯讀串接已驗證；兩種掌機解析度使用自動版面檢查，實體掌機操作與部署仍待驗收。
+
 ## 看圖開啟與操作
 
 先完成安裝，從遊戲機原有選單開啟。點圖可放大；完整步驟與按鍵速查見 [遊戲機操作圖解](docs/device-controls.md)。

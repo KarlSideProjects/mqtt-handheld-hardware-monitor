@@ -13,6 +13,14 @@
 
 兩台的監控 HTTP 服務均為設備本機 `127.0.0.1:8766`。PVE 採集主機與 MQTT broker 屬於採集端設定，不能從掌機 IP 推導。診斷不讀取或輸出這些帳密。
 
+## 完整安裝後重新啟動
+
+R36 從 SSH 啟動前，先停止占用顯示的 emulationstation，再使用既有 Ports 啟動器。TrimUI 從 Apps 入口啟動；從 SSH 維護時，使用原廠 `/tmp/cmd_to_run.sh` 排程交給 `/usr/trimui/bin/runtrimui.sh` 執行，不能在 MainUI 仍執行時以 `nohup` 直接啟動監控。
+
+TrimUI 排程前先確認沒有現有監控或其他待執行排程。排程內容為執行 `/mnt/SDCARD/Apps/HardwareMonitor/launch.sh`，再結束已核對的 MainUI 程序，讓原廠迴圈接手。此設備 MainUI 不回應 SIGTERM；需要時只對已核對名稱及 PID 的 MainUI 使用 SIGKILL，原廠迴圈支援其退出碼 137。不要終止 `runtrimui.sh`。
+
+完成條件：只剩一個監控程序，其父程序為原廠啟動迴圈，沒有同時執行的 MainUI，MQTT 持續更新，至少觀察 12 秒沒有新增 `Could not queue pageflip: -16`。MainUI 與監控同時繪製會造成實體螢幕持續閃爍；只通過網頁載入確認不足以排除此問題。
+
 ## 認證與前置條件
 
 在有本儲存庫工作副本及 Python 3 的開發電腦執行下列命令。先用一般 SSH 核對目標的主機金鑰並登錄至 `known_hosts`。工具採 `StrictHostKeyChecking=yes`；使用現有 SSH agent，或透過 `--identity /path/to/key` 指定金鑰，`--user` 可覆寫表中的使用者。

@@ -1,0 +1,50 @@
+{
+  "host": "linux-host",
+  "ts": 1792500000,
+  "docker": {
+    "version": 1,
+    "provider": "docker",
+    "node": "linux-host",
+    "observed_at": 1792500000,
+    "status": "ok",
+    "guests": [
+      {
+        "id": "docker:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "container_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "type": "docker",
+        "node": "linux-host",
+        "name": "web",
+        "status": "running",
+        "uptime": null,
+        "vcpus": null,
+        "memory_basis": "docker_cache_excluded",
+        "cpu": {
+          "percent_total": 200.0
+        },
+        "memory": {
+          "ram": {
+            "used": 536870912,
+            "total": 2147483648,
+            "percent": 25.0
+          }
+        },
+        "network_io": {
+          "total": {
+            "rate": {
+              "rx_bytes_per_s": 1024,
+              "tx_bytes_per_s": 512
+            }
+          }
+        },
+        "disk_io": {
+          "total": {
+            "rate": {
+              "read_bytes_per_s": 4096,
+              "write_bytes_per_s": null
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -44,5 +44,14 @@ guestDetail=PVEView.render({provider:'pve',fresh:true,guests:[guest]},0,0,{esc,f
 if((guestDetail.match(/<polyline/g)||[]).length!==2) throw Error('Unknown trend gaps were connected');
 if(!PVEView.render({status:'error'},0,0,{esc,fmt,bytes}).includes('Guest inventory unavailable')) throw Error('Missing PVE unknown inventory state');
 if(!PVEView.render({status:'unconfigured'},0,0,{esc,fmt,bytes}).includes('not configured yet')) throw Error('Missing PVE setup state');
+
+let container={...guest,type:'docker',id:'docker:'+'a'.repeat(64),container_id:'a'.repeat(64),cpu:{percent_total:250},status:'restarting'};
+let dockerValue={provider:'docker',fresh:true,status:'ok',guest_count:1,guests:[container]};
+let dockerList=PVEView.render(dockerValue,0,0,{esc,fmt,bytes});
+let dockerDetail=PVEView.render(dockerValue,0,0,{esc,fmt,bytes,rate,graph},true);
+if(!dockerList.includes('Docker containers')||!dockerList.includes('250.0%')||dockerList.includes('VM undefined')||!dockerList.includes('Restarting'))throw Error('Docker list semantics missing');
+if(!dockerDetail.includes('Cache excluded')||dockerDetail.includes('PVE statistics')||!dockerDetail.includes('aaaaaaaaaaaa')||dockerDetail.includes('<img'))throw Error('Docker details are unsafe or use PVE metric labels');
+sample.virtualization={provider:'pve',guest_count:2,status:'ok',fresh:true};sample.docker=dockerValue;
+if(!detail(sample).includes('CT / VM guests')||!detail(sample).includes('Docker containers')||!overview(sample,'<test>').includes('Docker 1'))throw Error('PVE and Docker entries do not coexist');
 `, context);
 console.log('PASS: host escaping, missing metrics, top 4 of 32 cores, all metric categories, sparse history, VRAM');

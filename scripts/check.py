@@ -18,6 +18,7 @@ LOCAL_TESTS = (
     'test_menu.py',
     'test_device_info.py',
     'test_check_runner.py',
+    'test_device_ops.py',
 )
 
 

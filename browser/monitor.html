@@ -126,10 +126,21 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .pve-list{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:18px 20px}.pve-list h2{font-size:28px;display:flex;justify-content:space-between;align-items:center}.pve-list h2 .tag{font-size:18px}.pve-rows{display:grid;grid-auto-rows:minmax(0,1fr);gap:9px;min-height:0}.pve-row{display:grid;grid-template-columns:100px minmax(120px,1fr) 130px 150px;grid-template-rows:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding:8px 12px;border:2px solid var(--ink);border-radius:12px;background:#e6f5ff;font-size:18px;min-width:0}.pve-row.selected{background:#fff1b7;outline:3px solid #cb8e16}.pve-row>*{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pve-row .pve-memory{grid-column:1/-1;overflow:visible;text-overflow:clip}.distance-detail.pve-enabled>.detail-shortcut,.distance-detail.pve-enabled>.pve-entry{grid-column:span 2}.distance-detail .pve-entry{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}.distance-detail .pve-entry.selected{outline:4px solid #cb8e16;outline-offset:-7px}.distance-detail.pve-enabled>.detail-shortcut,.distance-detail.pve-enabled>.pve-entry{padding:6px 9px}.distance-detail.pve-enabled>.detail-shortcut h3,.distance-detail.pve-enabled>.pve-entry h3{font-size:16px;line-height:20px;margin:0}.distance-detail.pve-enabled>.detail-shortcut>span,.distance-detail.pve-enabled>.pve-entry>span{font-size:15px;line-height:18px}
 .pve-detail{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:10px;padding:14px 18px}.pve-detail h2{font-size:22px;display:flex;justify-content:space-between;gap:8px;min-width:0}.pve-detail h2 .pve-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pve-detail h2 .tag{flex:none;font-size:15px}.pve-readings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.pve-reading{min-width:0;padding:7px 9px;border:2px solid var(--ink);border-radius:9px;background:#e6f5ff}.pve-reading small,.pve-trend small{display:block;font-size:13px;font-weight:bold}.pve-reading strong{display:block;font-size:19px;margin-top:4px;white-space:nowrap}.pve-reading.pve-memory-reading{grid-column:1/-1}.pve-trends{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;min-height:0}.pve-trend{min-width:0;padding:6px 8px;border:1px solid #becbc6;border-radius:8px;background:#edf2ef}.pve-trend svg{width:100%;height:calc(100% - 20px);min-height:35px;display:block}
 /* Guest details keep distance-readable values above compact trends. */
-.pve-row{grid-template-columns:175px minmax(120px,1fr) 115px 230px;font-size:24px}
+.pve-row{grid-template-columns:175px minmax(120px,1fr) 210px 190px;font-size:24px}
 .pve-row>strong{font-size:26px}
 .pve-row>:nth-child(4){font-size:30px;font-weight:900}
 .pve-row .pve-memory{font-size:26px;font-weight:bold}
+.pve-state{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;max-width:100%;padding:5px 8px;border:3px solid var(--ink);border-radius:9px;line-height:1;white-space:normal;text-align:center}
+.pve-state b{font-size:24px;line-height:1;font-variant-numeric:tabular-nums}
+.pve-state span{font-size:24px;line-height:1.1;font-weight:900;white-space:nowrap}
+.pve-state-on{background:#c9f5e1;border-color:#1b744b;border-style:solid}
+.pve-state-off{background:#e7e9ec;border-color:#596779;border-style:dashed}
+.pve-state-paused{background:#fff0b8;border-color:#9a6711;border-style:double}
+.pve-state-unknown{background:#eee5f8;border-color:#68448a;border-style:dotted}
+.pve-row>.pve-state{overflow:visible;text-overflow:clip;white-space:normal}
+.pve-detail h2>.pve-state{flex:none;flex-direction:row;gap:8px;padding:4px 8px;min-width:148px;font-size:24px}
+.pve-detail h2>.pve-state b{font-size:20px}
+.pve-detail h2>.pve-state span{font-size:22px}
 .pve-detail{grid-template-rows:auto minmax(0,1fr) 112px}
 .pve-readings{gap:10px;grid-template-rows:1.2fr 1fr 1fr;min-height:0}
 .pve-reading{display:flex;flex-direction:column;justify-content:center;padding:8px 12px}
@@ -146,6 +157,9 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 <div id="summary"></div><main id="main"></main>
 <footer><span id="help"><kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Details <kbd>B</kbd> Back</span><span><button onclick="control('previous')">L1 Previous</button> <button onclick="control('next')">R1 Next</button> <button onclick="control('toggle')">Start Pause / resume</button></span><span><button id="screen-button" onclick="control('screen')" aria-label="Turn screen off; press FN to wake">FN Screen off</button> <kbd id="exit-keys">Select + B</kbd> Exit</span></footer>
 <script src="/pve.js"></script><script>
+const deploymentRevision='__HWMONITOR_REVISION__';
+const deploymentAckUrl='__HWMONITOR_ACK_URL__';
+let deploymentAcknowledged=false;
 const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
 const fmt=(v,suffix='')=>numeric(v)?v.toFixed(1)+suffix:'—';
@@ -237,6 +251,11 @@ function render(s){
  root.querySelectorAll('article').forEach(a=>a.classList.toggle('selected',a.dataset.host===s.selected));
  root.querySelectorAll('[data-section]').forEach(p=>{p.classList.toggle('selected',p.dataset.section===s.panel);p.setAttribute('aria-pressed',String(p.dataset.section===s.panel))});
  lastSelection=s.selected;lastPanel=s.panel;
+ if(/^[a-f0-9]{64}$/.test(deploymentRevision))document.title='Hardware Monitor ['+deploymentRevision+']';
+ if(!deploymentAcknowledged&&/^http:\/\/127\.0\.0\.1:\d+\/loaded\//.test(deploymentAckUrl)){
+  deploymentAcknowledged=true;
+  fetch(deploymentAckUrl,{mode:'no-cors',cache:'no-store'}).catch(()=>{});
+ }
  root.scrollTop=0;
 }
 function lost(){for(const id of ['local-temp','local-cpu','local-memory','local-battery'])document.getElementById(id).textContent='—';document.getElementById('charge-icon').innerHTML='';document.getElementById('local-battery-box').classList.remove('powered');document.getElementById('connection').textContent='Display connection lost';document.getElementById('connection').className='error'}

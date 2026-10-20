@@ -6,7 +6,8 @@ from pathlib import Path
 from monitor import Monitor
 
 FIXTURE = json.loads((Path(__file__).parent / 'fixtures/virtualization-v1.fixture.json').read_text())
-now = time.monotonic()
+# Exact-second fixtures keep the 10-second expiry boundary independent of float rounding.
+now = float(int(time.monotonic()))
 message = dict(FIXTURE, ts=time.time(), virtualization=dict(FIXTURE['virtualization'], observed_at=time.time()))
 message['virtualization']['guests'] += [
     dict(message['virtualization']['guests'][0], id=f'lab:qemu:{vmid}', vmid=vmid, name=f'vm-{vmid}')

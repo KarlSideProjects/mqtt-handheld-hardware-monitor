@@ -56,9 +56,9 @@ MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我�
 
 資料流程：**電腦採集程式 → MQTT broker → 掌機監控畫面**。本倉庫提供掌機顯示端與安裝腳本；電腦採集端及 broker 需另行準備。
 
-安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
+安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。已安裝設備的畫面更新與精簡診斷見 [設備操作說明](docs/agents/device-operations.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；GitHub Actions 執行軟體與版面檢查，實機測試另行操作。
 
-PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝及唯讀 API 設定請依[官方採集端專案](https://github.com/KarlSideProjects/hwmonitor-mqtt)操作；本功能尚未在實際 PVE 主機或兩台掌機上驗收。[研究與模組設計](docs/pve-monitoring-research.md)記錄資料來源、限制及尚待實機確認的項目。
+PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝及唯讀 API 設定請依[官方採集端專案](https://github.com/KarlSideProjects/hwmonitor-mqtt)操作；R36 已收到實際 PVE 的兩臺 VM 與五個 CT 資料，實體按鍵與 LCD 的完整驗收仍需另外確認。[研究與模組設計](docs/pve-monitoring-research.md)記錄資料來源、限制及尚待實機確認的項目。
 
 <details>
 <summary>展開 CT／VM 操作細節：進入清單、切換客機與返回</summary>
@@ -69,7 +69,9 @@ PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝�
 4. 在客機詳情用 **L1／R1** 切換同一 PVE 主機的上一臺／下一臺客機。
 5. 按 **B** 逐層返回：客機詳情 → 客機清單 → PVE 主機詳情 → 主機總覽。
 
-客機清單每頁顯示四臺，放大編號、名稱、狀態與 CPU／RAM 數值。客機詳情以大字顯示 CPU、vCPU、RAM 使用率與容量，以及網路／磁碟速率；下方保留縮小的六張趨勢圖。RAM 為 PVE 回報的統計值，缺少的數據顯示 `—`。標示 **Stale** 代表客機觀測資料已過期；**Setup required** 或 **API error** 時，需先檢查 PVE 採集端設定與服務。
+客機清單每頁顯示四臺，放大編號、名稱、狀態與 CPU／RAM 數值。清單與詳情都以文字和不同邊框的標記區分 **ON／Running**（開機）、**OFF／Stopped**（關機）、**PAUSED／Suspended**（暫停）及 **UNKNOWN／Unknown**（未知），不只依賴顏色。標記僅顯示採集狀態，沒有開關機控制。
+
+客機詳情以大字顯示 CPU、vCPU、RAM 使用率與容量，以及網路／磁碟速率；下方保留縮小的六張趨勢圖。RAM 為 PVE 回報的統計值，缺少的數據顯示 `—`。標示 **Stale** 代表客機觀測資料已過期；**Setup required** 或 **API error** 時，需先檢查 PVE 採集端設定與服務。
 
 </details>
 
@@ -307,22 +309,17 @@ TrimUI 的實體顯示、方向鍵延遲、按鍵映射與退出清理結果見 
 
 GPU、VRAM 與溫度等資訊取決於採集端回報內容。缺少資料時以橫線標示，不以零值代替。更多主機的實機顯示，以及其他掌機型號，仍需各自驗證。
 
-在開發電腦執行基本測試，Python 測試不需要連接 MQTT broker：
+在開發電腦執行固定的本機測試，Python 測試不需要連接 MQTT broker。Node.js 22 的套件版本由 lockfile 固定：
 
 ```bash
-python3 browser/test_install.py
-python3 browser/test_trimui_browser.py
-python3 browser/test_trimui_power.py
-python3 browser/test_monitor.py
-python3 browser/test_monitor_events.py
-python3 browser/test_pve.py
-python3 browser/test_menu.py
-python3 browser/test_device_info.py
-node browser/test_monitor_ui.cjs
-bash -n browser/install.sh browser/client.sh browser/xserver.sh 'browser/Hardware Monitor.sh'
+npm ci
+npx playwright install chromium
+python3 scripts/check.py --layout
 ```
 
-版面測試需要 Node.js 與 Playwright，可執行 `node browser/test_monitor_layout.cjs`；PVE 版面可在 1024 × 768 與 1280 × 720 檢查。這些瀏覽器測試不代表已連接 PVE API 或實機掌機驗收。在已開啟監控的掌機上，`measure_startup.py`、`measure_input.py` 與 `test_awake.py` 分別檢查啟動等待、按鍵到畫面的延遲，以及常亮設定。
+略過版面測試時執行 `python3 scripts/check.py`。`--layout` 檢查 1024 × 768 與 1280 × 720，包含 CT／VM 開關機狀態、字體、長名稱與數值裁切。GitHub Actions 使用同一入口；本機入口不會操作掌機輸入或背光。
+
+實機關屏、常亮與退出測試須明確使用 `scripts/check_device.py`；設備辨識、執行環境與有狀態變更的測試說明見 [設備操作說明](docs/agents/device-operations.md#本機與實機測試)。軟體測試通過不等於實體掌機驗收。
 
 ## 授權與相關專案
 

@@ -3,7 +3,8 @@ import json
 import time
 from monitor import Monitor, normalize
 
-now = time.monotonic()
+# Exact-second fixtures keep the 10-second expiry boundary independent of float rounding.
+now = float(int(time.monotonic()))
 payload = {'cpu': {'percent_total': 42, 'percent_per_core': [25, 59]},
            'memory': {'ram': {'percent': 63, 'used': 8 * 2**30, 'total': 16 * 2**30}},
            'gpus': [{'usage_percent': 37, 'temperature_celsius': 62}],
@@ -65,7 +66,8 @@ print('PASS: 7-host pagination, pause/resume, auto rotation, detail/offline, pay
 
 # Three-level navigation, direct clicks, card switching, and offline fallback.
 state = Monitor()
-publish(state, 'drilldown', time.monotonic())
+drilldown_now = float(int(time.monotonic()))
+publish(state, 'drilldown', drilldown_now)
 state.action('detail')
 assert state.snapshot()['panel'] == 'cpu' and state.focus is None
 state.action('detail')
@@ -81,7 +83,7 @@ assert state.focus == 'memory'
 state.action('back')
 state.action('focus:network')
 assert state.focus == 'network'
-state.tick(time.monotonic() + 10)
+state.tick(drilldown_now + 10)
 assert state.detail is None and state.focus is None
 print('PASS: overview/device/metric navigation, click actions, metric switching, offline fallback')
 

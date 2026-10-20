@@ -2,7 +2,7 @@
 
 建議用同網段的 Linux 自架 runner，結合 pytest／OpenSSH、Playwright、掌機上的瀏覽器自動化，以及固定相機，驗證 R36 與 TrimUI 的監控面板。模擬器負責軟體相容性，實機負責 GPU、按鍵、休眠與 LCD 驗收。任何單一工具都不能保證生產環境完全沒有問題。
 
-這份手冊供維護者建立 CI，安裝操作另見 [雙設備安裝說明](installation.md)。**CI 建置流程是尚未部署的草案**；文中會標示已實測項目。工具能力依 2026-10-20 查閱的官方文件整理，版本更換後需要重新確認。
+這份手冊供維護者建立 CI，安裝操作另見 [雙設備安裝說明](installation.md)。軟體 CI 定義於 [.github/workflows/ci.yml](../.github/workflows/ci.yml)，在 GitHub-hosted runner 使用固定套件與 `scripts/check.py --layout`，不提供設備帳密或內網存取。下列自架 runner、實機與相機流程仍為草案；文中會標示已實測項目。工具能力依 2026-10-20 查閱的官方文件整理，版本更換後需要重新確認。
 
 ## 1. 目前狀態與判定方式
 
@@ -10,7 +10,7 @@ Cog 路徑的黑屏是必須攔截的失敗案例。[實測紀錄](evidence/trim
 
 此紀錄中的 framebuffer 擁有者欄位來自該台韌體的 debugfs。它是該 Cog 測試的必要診斷條件，不能直接當成所有 DRM 裝置的通用測試，也不能證明實體 LCD 可見。
 
-2026-10-20 的 GitHub 唯讀查詢中，這個儲存庫沒有已登錄的 Actions workflow，儲存庫及所屬組織的 runner 清單均為空。查詢時倉庫舊稱 `r36max2-hwmonitor`；查詢範圍是 `repos/KarlSideProjects/r36max2-hwmonitor/actions/{workflows,runners}` 及 `orgs/KarlSideProjects/actions/runners`，不包含帳號其他儲存庫。本文沒有建立 runner 或啟用工作流程。Chromium／SDL 實機測試由人工觸發執行，使用者已確認橋接頁面可見，結果見 [安裝驗證](installation.md#驗證與限制)，尚未串接 CI。
+既有調查紀錄：2026-10-20 的 GitHub 唯讀查詢中，這個儲存庫沒有已登錄的 Actions workflow，儲存庫及所屬組織的 runner 清單均為空。查詢時倉庫舊稱 `r36max2-hwmonitor`；查詢範圍是 `repos/KarlSideProjects/r36max2-hwmonitor/actions/{workflows,runners}` 及 `orgs/KarlSideProjects/actions/runners`，不包含帳號其他儲存庫。此查詢紀錄不代表目前軟體 workflow 的狀態。Chromium／SDL 實機測試由人工觸發執行，使用者已確認橋接頁面可見，結果見 [安裝驗證](installation.md#驗證與限制)，尚未串接硬體 CI。
 
 建議 CI 分別回報以下狀態，發布時要求對應機型全部通過：
 

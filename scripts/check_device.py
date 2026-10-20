@@ -50,7 +50,7 @@ def r36_device():
 
 
 def trimui_dashboard_running():
-    result = subprocess.run(['pgrep', '-af', 'trimui_browser.py'], capture_output=True, text=True, check=False)
+    result = subprocess.run(['pgrep', '-af', 'trimui_browser.py'], capture_output=True, text=True, check=False, timeout=4)
     return result.returncode == 0 and any(re.search(
         r'^\d+\s+(?:\S*/)?python3\s+.*runtime/trimui_browser\.py(?:\s|$)', line
     ) for line in result.stdout.splitlines())

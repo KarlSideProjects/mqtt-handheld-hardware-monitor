@@ -19,3 +19,7 @@ For structural codebase exploration, use the installed `codebase-memory` skill.
 ### Domain docs
 
 採 single-context 配置；探索領域概念或決策前讀取 `docs/agents/domain.md`。
+
+### Device operations
+
+部署、更新或診斷 R36／TrimUI 前，讀取 `docs/agents/device-operations.md`，使用其中的設備工具與驗證條件。

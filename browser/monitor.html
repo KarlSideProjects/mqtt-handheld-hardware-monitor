@@ -158,6 +158,8 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 <footer><span id="help"><kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Details <kbd>B</kbd> Back</span><span><button onclick="control('previous')">L1 Previous</button> <button onclick="control('next')">R1 Next</button> <button onclick="control('toggle')">Start Pause / resume</button></span><span><button id="screen-button" onclick="control('screen')" aria-label="Turn screen off; press FN to wake">FN Screen off</button> <kbd id="exit-keys">Select + B</kbd> Exit</span></footer>
 <script src="/pve.js"></script><script>
 const deploymentRevision='__HWMONITOR_REVISION__';
+const deploymentAckUrl='__HWMONITOR_ACK_URL__';
+let deploymentAcknowledged=false;
 const esc=v=>String(v??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const numeric=v=>typeof v==='number'&&Number.isFinite(v);
 const fmt=(v,suffix='')=>numeric(v)?v.toFixed(1)+suffix:'—';
@@ -250,6 +252,10 @@ function render(s){
  root.querySelectorAll('[data-section]').forEach(p=>{p.classList.toggle('selected',p.dataset.section===s.panel);p.setAttribute('aria-pressed',String(p.dataset.section===s.panel))});
  lastSelection=s.selected;lastPanel=s.panel;
  if(/^[a-f0-9]{64}$/.test(deploymentRevision))document.title='Hardware Monitor ['+deploymentRevision+']';
+ if(!deploymentAcknowledged&&/^http:\/\/127\.0\.0\.1:\d+\/loaded\//.test(deploymentAckUrl)){
+  deploymentAcknowledged=true;
+  fetch(deploymentAckUrl,{mode:'no-cors',cache:'no-store'}).catch(()=>{});
+ }
  root.scrollTop=0;
 }
 function lost(){for(const id of ['local-temp','local-cpu','local-memory','local-battery'])document.getElementById(id).textContent='—';document.getElementById('charge-icon').innerHTML='';document.getElementById('local-battery-box').classList.remove('powered');document.getElementById('connection').textContent='Display connection lost';document.getElementById('connection').className='error'}

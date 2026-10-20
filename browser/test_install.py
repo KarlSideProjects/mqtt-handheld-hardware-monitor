@@ -255,3 +255,10 @@ with tempfile.TemporaryDirectory() as temp:
         result = subprocess.run(['bash','-c',shell,'bash',helper,str(source),expected,str(output)],capture_output=True,text=True)
         assert (result.returncode == 0) == success
 print('PASS: dependency bootstrap accepts the pinned digest and rejects corrupted downloads')
+
+# Both handheld installers must stage and verify the receiver module and its renderer.
+for name in ('install.sh', 'install-trimui.sh'):
+    installer = Path(__file__).with_name(name).read_text()
+    assert 'pve.py' in installer and 'pve.js' in installer, f'{name} omits the PVE display files'
+    assert 'Application files missing' in installer if name == 'install.sh' else 'Application not installed' in installer
+print('PASS: both handheld installers package and check PVE display files')

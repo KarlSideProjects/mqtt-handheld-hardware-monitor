@@ -10,6 +10,7 @@ import struct
 import subprocess
 import threading
 import time
+import pve
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -174,6 +175,8 @@ class Monitor:
         self.hosts = {}
         self.selected = None
         self.detail = None
+        self.pve_view = None
+        self.pve_index = 0
         self.focus = None
         self.panel = 0
         self.scroll = 0
@@ -207,6 +210,12 @@ class Monitor:
                     return False
                 entry = self.hosts.setdefault(host, {'history': deque(maxlen=60)})
                 entry.update(host=host, seen=now, metrics=metrics)
+                if 'virtualization' in data:
+                    try:
+                        entry['virtualization'] = pve.apply_virtualization(
+                            data['virtualization'], entry.get('virtualization'))
+                    except (ValueError, TypeError, OverflowError, RecursionError):
+                        self.bad_messages += 1
                 entry['history'].append({key: metrics[key] for key in
                                          ('cpu', 'gpu', 'ram', 'rx', 'tx', 'read', 'write', 'cpu_temp', 'gpu_temp', 'swap')})
                 entry['history'][-1]['gpus'] = [
@@ -233,6 +242,7 @@ class Monitor:
             if self.detail not in self.hosts:
                 self.detail = None
                 self.focus = None
+                self.pve_view = None
                 self.panel = 0
             if self.selected not in self.hosts:
                 self.selected = order[0] if order else None
@@ -259,6 +269,22 @@ class Monitor:
                 return
             self.tick(now)
             order = list(self.hosts)
+            if self.pve_view == 'guests' and self.detail in self.hosts:
+                virtualization = self.hosts[self.detail].get('virtualization')
+                guests = virtualization.get('guests', []) if virtualization else []
+                if action == 'back':
+                    self.pve_view = None
+                    self.pve_index = 0
+                elif action in ('up', 'down') and guests:
+                    self.pve_index = (self.pve_index + (1 if action == 'down' else -1)) % len(guests)
+                elif action in ('previous', 'next'):
+                    self.pve_index = max(0, min(max(0, len(guests) - 1), self.pve_index + (-4 if action == 'previous' else 4)))
+                else:
+                    return
+                self.paused = True
+                self.version += 1
+                self.changed.notify_all()
+                return
             if action in ('left', 'right') and (self.detail is None or self.focus is not None):
                 action = 'previous' if action == 'left' else 'next'
                 if self.focus is not None:
@@ -272,6 +298,10 @@ class Monitor:
                 else:
                     self.detail = None
                 self.scroll = 0
+                self.paused = True
+            elif action == 'pve' and self.detail is not None and self.hosts[self.detail].get('virtualization'):
+                self.pve_view = 'guests'
+                self.pve_index = 0
                 self.paused = True
             elif order:
                 index = order.index(self.selected)
@@ -295,10 +325,15 @@ class Monitor:
                     self.scroll = 0
                 elif action in ('up', 'down', 'left', 'right') and self.detail is not None:
                     if self.focus is None:
-                        neighbors = {'up': {3: 0, 4: 2, 5: 3, 6: 4},
-                                     'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 6},
-                                     'left': {1: 0, 2: 1, 4: 3, 6: 5},
-                                     'right': {0: 1, 1: 2, 3: 4, 5: 6}}
+                        has_pve = bool(self.hosts[self.detail].get('virtualization'))
+                        neighbors = ({'up': {3: 0, 4: 1, 5: 3, 6: 3, 7: 4},
+                                      'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 6},
+                                      'left': {1: 0, 2: 1, 4: 3, 6: 5, 7: 6},
+                                      'right': {0: 1, 1: 2, 3: 4, 5: 6, 6: 7}} if has_pve else
+                                     {'up': {3: 0, 4: 2, 5: 3, 6: 4},
+                                      'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 6},
+                                      'left': {1: 0, 2: 1, 4: 3, 6: 5},
+                                      'right': {0: 1, 1: 2, 3: 4, 5: 6}})
                         self.panel = neighbors[action].get(self.panel, self.panel)
                     elif self.focus in ('gpu', 'network', 'disks', 'temperatures'):
                         self.item_page += 1 if action == 'down' else -1
@@ -313,7 +348,11 @@ class Monitor:
                         self.detail = self.selected
                         self.panel = 0
                     elif self.focus is None:
-                        self.focus = SECTIONS[self.panel]
+                        if self.panel == len(SECTIONS) and self.hosts[self.detail].get('virtualization'):
+                            self.pve_view = 'guests'
+                            self.pve_index = 0
+                        else:
+                            self.focus = SECTIONS[self.panel]
                     self.scroll = 0
                     self.item_page = 0
                 else:
@@ -330,11 +369,13 @@ class Monitor:
             visible = [self.detail] if self.detail else order[page * 3:page * 3 + 3]
             return {'device': self.device.sample(), 'connection': self.connection, 'paused': self.paused, 'detail': self.detail,
                     'screen_off': bool(self.screen and self.screen.asleep),
-                    'focus': self.focus, 'panel': SECTIONS[self.panel], 'item_page': self.item_page,
+                    'focus': self.focus, 'pve_view': self.pve_view,
+                    'pve_page': self.pve_index // 4, 'pve_selected': self.pve_index,
+                    'panel': ('pve' if self.panel == len(SECTIONS) and self.detail and self.hosts[self.detail].get('virtualization') else SECTIONS[self.panel]), 'item_page': self.item_page,
                     'selected': self.selected, 'page': page + 1, 'pages': max(1, (len(order) + 2) // 3),
                     'count': len(order), 'bad_messages': self.bad_messages,
                     'scroll': self.scroll,
-                    'hosts': [{k: (list(v) if self.detail else [{'cpu': sample['cpu'], 'ram': sample['ram']} for sample in v]) if k == 'history' else v for k, v in self.hosts[h].items() if k != 'seen'}
+                    'hosts': [{k: (list(v) if self.detail else [{'cpu': sample['cpu'], 'ram': sample['ram']} for sample in v]) if k == 'history' else (pve.snapshot_virtualization(v) if k == 'virtualization' else v) for k, v in self.hosts[h].items() if k != 'seen'}
                               for h in visible]}
 
 
@@ -491,6 +532,8 @@ def handler(state):
                 self.respond((ROOT / 'monitor.html').read_bytes(), 'text/html; charset=utf-8')
             elif self.path == '/assets/hardware-buddy.svg':
                 self.respond((ROOT / 'assets/hardware-buddy.svg').read_bytes(), 'image/svg+xml')
+            elif self.path == '/pve.js':
+                self.respond((ROOT / 'pve.js').read_bytes(), 'application/javascript; charset=utf-8')
             elif self.path == '/events':
                 self.send_response(200)
                 self.send_header('Content-Type', 'text/event-stream')
@@ -525,7 +568,7 @@ def handler(state):
                     raise ValueError('Invalid body size')
                 self.connection.settimeout(3)
                 action = json.loads(self.rfile.read(size)).get('action')
-                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS}:
+                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS} | {'pve'}:
                     raise ValueError('Invalid action')
                 state.action(action)
                 self.respond(b'{}', 'application/json')

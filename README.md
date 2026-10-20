@@ -4,6 +4,30 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 
 **把掌機變成桌上的電腦硬體監控螢幕，一台掌機就能查看多台電腦。**
 
+## 一張圖看懂用途
+
+![把電腦硬體資料透過 MQTT 傳給網頁與掌機，掌機作為桌面監控螢幕](docs/images/monitoring-overview.png)
+
+## 複製給 AI，協助你安裝
+
+把下面整段貼給**能讀取 GitHub、執行終端指令及透過 SSH 連線的 AI 助理**，就能請它協助安裝。補上掌機型號與 IP；登入或 MQTT 資訊不足時，AI 會需要你提供。安裝腳本會處理相依套件與互動設定，實際畫面仍需你在掌機上確認。
+
+```text
+請幫我安裝 https://github.com/KarlSideProjects/mqtt-handheld-hardware-monitor。
+我的掌機型號是［填入型號］，IP 是［填入 IP］。
+先讀 README、docs/installation.md 與 docs/device-controls.md，確認設備
+和作業系統符合支援清單，再檢查現有安裝並保留設定與備份。
+R36 MAX 2 使用 browser/install.sh；TrimUI Smart Pro S 使用
+browser/install-trimui.sh。依文件使用 --ssh 連線安裝，讓對應腳本安裝相依套件。
+SSH 先嘗試文件列出的預設登入方式，失敗時讓我在本機終端輸入帳密；
+MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我補充並重試。
+不要把帳密寫進 Git 或公開輸出。若 AI 終端無法互動，提供需要我執行的命令。
+若電腦採集端尚未準備，先依 KarlSideProjects/hwmonitor-mqtt 的文件協助安裝。
+完成後確認 MQTT 連線及主機資料持續更新，告訴我如何從掌機選單開啟。
+請引導我實際確認畫面、方向鍵、A/B、關屏與喚醒以及退出回選單，
+分開回報自動檢查通過與尚需人工確認的項目。不要自行刷機。
+```
+
 ## 主要功能
 
 - **查看電腦狀態：** 顯示 CPU、GPU、顯示記憶體、記憶體、網路、磁碟與溫度。
@@ -189,12 +213,6 @@ bash browser/install.sh --config /home/ark/hwmonitor-mqtt.json
 git pull --ff-only
 bash browser/install.sh
 ```
-
-### 給 AI 的安裝指令
-
-可把以下文字交給下一個 AI；補上掌機 IP 及首次安裝的私有 MQTT 設定檔位置。
-
-> 請在 R36 MAX 2 上安裝 KarlSideProjects/mqtt-handheld-hardware-monitor。先讀 README 的安裝流程與 browser/install.sh。透過 SSH 以 ark 登入掌機，確認是 Debian 13 ARM64 的 dArkOS4Clone，並且有 /roms/ports、/dev/dri/card0、/dev/input/event2 與內建 zram-swap.service。使用既有乾淨 checkout，或下載專案；不要覆蓋未提交修改。退出正在執行的遊戲或監控。執行 sudo -v 後執行 bash browser/install.sh；首次需要 MQTT 設定時使用 --config 指向掌機上的私有 JSON 檔。已有設定就保留，不要輸出帳密。記錄備份路徑，執行 --check，從 Ports 開啟 Hardware Monitor，再檢查 /status 的連線和主機資料、圖示、按鍵、不自動休眠、FN 關閉與喚醒，以及退出回選單。若 SSH 或 MQTT 資訊不足，只詢問缺少的資訊。報告通過哪些檢查及未驗證項目；不要自行刷機或更改 broker／採集端。
 
 ### 驗證安裝
 

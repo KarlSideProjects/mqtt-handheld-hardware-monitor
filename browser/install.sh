@@ -44,7 +44,7 @@ PY
 verify() {
     for command in chromium startx xset; do command -v "$command" >/dev/null || fail "Missing $command"; done
     python3 -c 'import paho.mqtt.client as m; assert hasattr(m, "CallbackAPIVersion")'
-    [[ -s $app/lib/libgbm.so.1 && -s $app/monitor.html && -s /roms/ports/images/hardware-buddy.png ]] || fail 'Application files missing.'
+    [[ -s $app/lib/libgbm.so.1 && -s $app/monitor.html && -s $app/pve.py && -s $app/pve.js && -s /roms/ports/images/hardware-buddy.png ]] || fail 'Application files missing.'
     [[ -x '/roms/ports/Hardware Monitor.sh' && -r /dev/input/event2 ]] || fail 'Launcher or input permissions missing.'
     [[ $(loginctl show-user ark -p Linger --value) == yes ]] || fail 'Run sudo loginctl enable-linger ark.'
     grep -q '^/dev/zram' /proc/swaps || fail 'ZRAM is not active.'
@@ -116,7 +116,7 @@ fi
 setup_args=(--output "$work/mqtt-config.json")
 [[ -z $config ]] || setup_args+=(--config "$config")
 python3 "$source_dir/mqtt_setup.py" "${setup_args[@]}"
-for file in monitor.py device_info.py install-menu.py monitor.html xorg.conf; do
+for file in monitor.py pve.py device_info.py install-menu.py monitor.html pve.js xorg.conf; do
     install -m 644 "$source_dir/$file" "$app/$file"
 done
 for file in client.sh xserver.sh 'Hardware Monitor.sh' 'Device Info.sh'; do

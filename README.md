@@ -4,6 +4,30 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 
 **把掌機變成桌上的電腦硬體監控螢幕，一台掌機就能查看多台電腦。**
 
+## 一張圖看懂用途
+
+![把電腦硬體資料透過 MQTT 傳給網頁與掌機，掌機作為桌面監控螢幕](docs/images/monitoring-overview.png)
+
+## 複製給 AI，協助你安裝
+
+把下面整段貼給**能讀取 GitHub、執行終端指令及透過 SSH 連線的 AI 助理**，就能請它協助安裝。補上掌機型號與 IP；登入或 MQTT 資訊不足時，AI 會需要你提供。安裝腳本會處理相依套件與互動設定，實際畫面仍需你在掌機上確認。
+
+```text
+請幫我安裝 https://github.com/KarlSideProjects/mqtt-handheld-hardware-monitor。
+我的掌機型號是［填入型號］，IP 是［填入 IP］。
+先讀 README、docs/installation.md 與 docs/device-controls.md，確認設備
+和作業系統符合支援清單，再檢查現有安裝並保留設定與備份。
+R36 MAX 2 使用 browser/install.sh；TrimUI Smart Pro S 使用
+browser/install-trimui.sh。依文件使用 --ssh 連線安裝，讓對應腳本安裝相依套件。
+SSH 先嘗試文件列出的預設登入方式，失敗時讓我在本機終端輸入帳密；
+MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我補充並重試。
+不要把帳密寫進 Git 或公開輸出。若 AI 終端無法互動，提供需要我執行的命令。
+若電腦採集端尚未準備，先依 KarlSideProjects/hwmonitor-mqtt 的文件協助安裝。
+完成後確認 MQTT 連線及主機資料持續更新，告訴我如何從掌機選單開啟。
+請引導我實際確認畫面、方向鍵、A/B、關屏與喚醒以及退出回選單，
+分開回報自動檢查通過與尚需人工確認的項目。不要自行刷機。
+```
+
 ## 主要功能
 
 - **查看電腦狀態：** 顯示 CPU、GPU、顯示記憶體、記憶體、網路、磁碟與溫度。
@@ -11,6 +35,7 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 - **使用掌機按鍵操作：** 選取電腦、切換資訊頁、返回或退出，保留原本的遊戲選單。
 - **單鍵關屏與喚醒：** R36 使用 FN，TrimUI 使用 X；關屏時 MQTT 繼續接收資料。
 - **查看掌機自身狀態：** 顯示本機 CPU、記憶體、溫度與電池資訊；無法取得的資料以橫線表示。
+- **瀏覽 PVE 客機：** 從 PVE 主機開啟 CT／VM 清單及詳情，查看 vCPU、PVE RAM、網路／磁碟速率與有效觀測趨勢；使用 A/B 逐層瀏覽，詳情中用 L1／R1 切換同一主機的客機。
 
 ## 目前支援的硬體
 
@@ -26,12 +51,14 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 ## 使用前需要
 
 1. 一台上表支援的掌機，連接網路與電源。
-2. 被監控的 Windows 或 Linux 電腦，安裝 [hwmonitor-mqtt 資料採集程式](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始)。
+2. 被監控的 Windows 或 Linux 電腦，安裝 [hwmonitor-mqtt 資料採集程式](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始)。
 3. 可連線的 MQTT broker，負責將電腦資料傳給掌機。
 
 資料流程：**電腦採集程式 → MQTT broker → 掌機監控畫面**。本倉庫提供掌機顯示端與安裝腳本；電腦採集端及 broker 需另行準備。
 
 安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
+
+PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝及唯讀 API 設定請依[官方採集端專案](https://github.com/KarlSideProjects/hwmonitor-mqtt)操作；本功能尚未在實際 PVE 主機或兩台掌機上驗收。[研究與模組設計](docs/pve-monitoring-research.md)記錄資料來源、限制及尚待實機確認的項目。
 
 ## 看圖開啟與操作
 
@@ -137,9 +164,9 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 被監控電腦上的 Agent → MQTT broker → 掌機本機服務 → 共用監控網頁
 ```
 
-本專案相容 [hwmonitor-mqtt](https://github.com/jhihweijhan/hwmonitor-mqtt) 的資料格式，預設訂閱 `sys/agents/+/metrics`。每台電腦使用不同的 `host` 名稱，掌機就會自動建立對應項目。
+本專案相容 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 的資料格式，預設訂閱 `sys/agents/+/metrics`。每台電腦使用不同的 `host` 名稱，掌機就會自動建立對應項目。
 
-先依 [hwmonitor-mqtt 的安裝說明](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
+先依 [hwmonitor-mqtt 的安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
 
 ## 安裝到掌機
 
@@ -189,12 +216,6 @@ bash browser/install.sh --config /home/ark/hwmonitor-mqtt.json
 git pull --ff-only
 bash browser/install.sh
 ```
-
-### 給 AI 的安裝指令
-
-可把以下文字交給下一個 AI；補上掌機 IP 及首次安裝的私有 MQTT 設定檔位置。
-
-> 請在 R36 MAX 2 上安裝 KarlSideProjects/mqtt-handheld-hardware-monitor。先讀 README 的安裝流程與 browser/install.sh。透過 SSH 以 ark 登入掌機，確認是 Debian 13 ARM64 的 dArkOS4Clone，並且有 /roms/ports、/dev/dri/card0、/dev/input/event2 與內建 zram-swap.service。使用既有乾淨 checkout，或下載專案；不要覆蓋未提交修改。退出正在執行的遊戲或監控。執行 sudo -v 後執行 bash browser/install.sh；首次需要 MQTT 設定時使用 --config 指向掌機上的私有 JSON 檔。已有設定就保留，不要輸出帳密。記錄備份路徑，執行 --check，從 Ports 開啟 Hardware Monitor，再檢查 /status 的連線和主機資料、圖示、按鍵、不自動休眠、FN 關閉與喚醒，以及退出回選單。若 SSH 或 MQTT 資訊不足，只詢問缺少的資訊。報告通過哪些檢查及未驗證項目；不要自行刷機或更改 broker／採集端。
 
 ### 驗證安裝
 
@@ -261,16 +282,17 @@ python3 browser/test_trimui_browser.py
 python3 browser/test_trimui_power.py
 python3 browser/test_monitor.py
 python3 browser/test_monitor_events.py
+python3 browser/test_pve.py
 python3 browser/test_menu.py
 python3 browser/test_device_info.py
 node browser/test_monitor_ui.cjs
 bash -n browser/install.sh browser/client.sh browser/xserver.sh 'browser/Hardware Monitor.sh'
 ```
 
-版面測試需要 Node.js 與 Playwright，可執行 `node browser/test_monitor_layout.cjs`。在已開啟監控的掌機上，`measure_startup.py`、`measure_input.py` 與 `test_awake.py` 分別检查啟動等待、按鍵到畫面的延遲，以及常亮設定。
+版面測試需要 Node.js 與 Playwright，可執行 `node browser/test_monitor_layout.cjs`；PVE 版面可在 1024 × 768 與 1280 × 720 檢查。這些瀏覽器測試不代表已連接 PVE API 或實機掌機驗收。在已開啟監控的掌機上，`measure_startup.py`、`measure_input.py` 與 `test_awake.py` 分別檢查啟動等待、按鍵到畫面的延遲，以及常亮設定。
 
 ## 授權與相關專案
 
-程式碼採用 [GNU GPL v3](LICENSE)。本專案連接 [hwmonitor-mqtt](https://github.com/jhihweijhan/hwmonitor-mqtt) 的監控資料，掌機系統來自 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone)。
+程式碼採用 [GNU GPL v3](LICENSE)。本專案連接 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 的監控資料，掌機系統來自 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone)。
 
 漫畫晶片圖示與監控頁面原始碼位於 [browser/assets](browser/assets) 與 [browser/monitor.html](browser/monitor.html)。Ports 截圖中的 EmulationStation 介面使用 [es-theme-switch](https://github.com/Jetup13/es-theme-switch)，其第三方元件依原專案授權；本儲存庫不包含完整遊戲系統或其二進位套件。

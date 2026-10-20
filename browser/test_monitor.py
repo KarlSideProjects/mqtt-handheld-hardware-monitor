@@ -3,7 +3,8 @@ import json
 import time
 from monitor import Monitor, normalize
 
-now = time.monotonic()
+# Exact-second fixtures keep the 10-second expiry boundary independent of float rounding.
+now = float(int(time.monotonic()))
 payload = {'cpu': {'percent_total': 42, 'percent_per_core': [25, 59]},
            'memory': {'ram': {'percent': 63, 'used': 8 * 2**30, 'total': 16 * 2**30}},
            'gpus': [{'usage_percent': 37, 'temperature_celsius': 62}],

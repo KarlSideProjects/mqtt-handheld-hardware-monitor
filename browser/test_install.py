@@ -279,6 +279,11 @@ with tempfile.TemporaryDirectory() as temp:
     result = subprocess.run(['bash', helper, '--preflight', str(root)], capture_output=True, text=True)
     assert result.returncode != 0 and (lock / 'unknown').read_text() == 'preserve'
     lock.rename(root / '.saved-lock')
+    lock.symlink_to(root / 'missing-target')
+    result = subprocess.run(['bash', helper, '--preflight', str(root)], capture_output=True, text=True)
+    assert result.returncode != 0 and lock.is_symlink()
+    assert not (root / 'missing-target').exists()
+    lock.unlink()
     mountinfo = Path(temp) / 'mountinfo'
     mountinfo.write_text(f'1 0 0:1 / {root}/proc rw - proc proc rw\n')
     result = subprocess.run(['bash', helper, '--preflight', str(root)],

@@ -18,7 +18,7 @@ assert_unmounted() {
 refuse_lock() { echo 'Runtime is already mounted; exit the monitor before updating.' >&2; exit 1; }
 assert_unmounted
 if [[ -d $lock ]]; then rmdir "$lock" 2>/dev/null || refuse_lock; fi
-[[ ! -e $lock || ( -f $lock && ! -L $lock ) ]] || refuse_lock
+[[ ! -L $lock && ( ! -e $lock || -f $lock ) ]] || refuse_lock
 exec {lock_fd}>>"$lock"
 flock -n "$lock_fd" || refuse_lock
 assert_unmounted

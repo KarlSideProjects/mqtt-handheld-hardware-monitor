@@ -20,6 +20,10 @@ LOCAL_TESTS = (
     'test_device_info.py',
     'test_check_runner.py',
     'test_device_ops.py',
+    'test_device_cli.py',
+    'test_device_restart.py',
+    'test_checkout.py',
+    'test_release.py',
 )
 
 

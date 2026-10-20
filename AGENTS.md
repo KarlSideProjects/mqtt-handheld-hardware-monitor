@@ -23,3 +23,7 @@ For structural codebase exploration, use the installed `codebase-memory` skill.
 ### Device operations
 
 部署、更新或診斷 R36／TrimUI 前，讀取 `docs/agents/device-operations.md`，使用其中的設備工具與驗證條件。
+
+### Session workflow
+
+開始探索現況或準備建置前，讀取 `docs/agents/workflow.md`，核對 checkout、版本與部署來源。

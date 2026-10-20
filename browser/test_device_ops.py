@@ -82,6 +82,21 @@ class DeviceOpsTests(unittest.TestCase):
         self.assertEqual(result['hosts'][0]['guest_count'], 7)
         self.assertEqual(result['view']['pve_guest_id'], 'lab:qemu:100')
 
+    def test_docker_diagnostics_include_provider_without_container_details(self):
+        value = status()
+        value['resource_provider'] = 'docker'
+        value['hosts'][0]['docker'] = {'status': 'error', 'guest_count': 18, 'fresh': False,
+                                       'age_seconds': 40, 'guests': [{'name': 'private-container'}],
+                                       'error': 'api_unavailable', 'token': 'private-token'}
+        result = summarize_status(value, 'trimui')
+        self.assertEqual(result['view']['resource_provider'], 'docker')
+        self.assertEqual(result['hosts'][0]['docker'], {'status': 'error', 'guest_count': 18,
+                                                       'fresh': False, 'age_seconds': 40,
+                                                       'error': 'api_unavailable'})
+        self.assertEqual(result['hosts'][0]['guest_count'], 7)
+        self.assertNotIn('private-container', json.dumps(result))
+        self.assertNotIn('private-token', json.dumps(result))
+
     def test_updates_files_loaded_revision_and_live_observations_preserving_config(self):
         before = self.private.stat()
         result = self.update()

@@ -15,11 +15,20 @@
 
 ## 完整安裝後重新啟動
 
-R36 從 SSH 啟動前，先停止占用顯示的 emulationstation，再使用既有 Ports 啟動器。TrimUI 從 Apps 入口啟動；從 SSH 維護時，使用原廠 `/tmp/cmd_to_run.sh` 排程交給 `/usr/trimui/bin/runtrimui.sh` 執行，不能在 MainUI 仍執行時以 `nohup` 直接啟動監控。
+完整安裝器完成後，以設備工具重啟，不需要自行拼接 SSH 啟動命令：
 
-TrimUI 排程前先確認沒有現有監控或其他待執行排程。排程內容為執行 `/mnt/SDCARD/Apps/HardwareMonitor/launch.sh`，再結束已核對的 MainUI 程序，讓原廠迴圈接手。此設備 MainUI 不回應 SIGTERM；需要時只對已核對名稱及 PID 的 MainUI 使用 SIGKILL，原廠迴圈支援其退出碼 137。不要終止 `runtrimui.sh`。
+```bash
+python3 scripts/device.py restart --device r36 --host 192.168.5.127
+python3 scripts/device.py restart --device trimui --host 192.168.5.160
+```
 
-完成條件：只剩一個監控程序，其父程序為原廠啟動迴圈，沒有同時執行的 MainUI，MQTT 持續更新，至少觀察 12 秒沒有新增 `Could not queue pageflip: -16`。MainUI 與監控同時繪製會造成實體螢幕持續閃爍；只通過網頁載入確認不足以排除此問題。
+重啟會先核對平台、啟動器及程序身分。R36 停止既有監控與 emulationstation，再使用既有 Ports 啟動器；失敗時嘗試恢復選單。TrimUI 停止既有監控後，使用原廠 `/tmp/cmd_to_run.sh` 排程交給 `/usr/trimui/bin/runtrimui.sh` 執行。未知排程或程序身分不符時停止，不覆寫其他應用程式的排程。
+
+TrimUI 的 MainUI 在 SIGTERM 後仍存活時，工具只對再次核對身分的程序使用 SIGKILL；原廠迴圈支援退出碼 137。訊號透過 pidfd 綁定程序，避免 PID 重用。不要在 MainUI 執行時用 nohup 直接啟動監控，也不要終止原廠 runtrimui 迴圈。
+
+完成條件：只剩一個監控與顯示程序；TrimUI 沒有同時執行的 MainUI，且監控由原廠迴圈持有；MQTT 就緒後持續觀察 12 秒，沒有新增 `Could not queue pageflip`。HTTP 與 MQTT 正常但新增 pageflip 錯誤，也會回報失敗並嘗試關閉新啟動的監控。
+
+此重啟命令已通過受控程序／檔案系統邊界測試，尚未在實體掌機執行。原廠排程交接與停止 MainUI 消除閃爍的流程已於 2026-10-20 實機驗證，使用者確認閃爍停止。
 
 ## 認證與前置條件
 
@@ -43,7 +52,9 @@ python3 scripts/device.py diagnose --device r36 --host 192.168.5.127
 python3 scripts/device.py diagnose --device trimui --host 192.168.5.160
 ```
 
-輸出為 JSON，只包含設備、載入版本、網頁檔案雜湊、連線、主機數、目前瀏覽位置與 PVE 資料狀態。不包含完整 `/status`、趨勢歷史、MQTT 設定、SSH 密碼或 PVE 密鑰。兩台可讀取帶有版本標記的當前頁面；尚未透過此工具載入的頁面顯示 `loaded_revision: null`。`last_verified_update` 是最後一次載入確認與時間，且必須仍符合目前檔案雜湊；該歷史紀錄不等於即時畫面檢查。
+輸出為 JSON，只包含設備、載入版本、網頁檔案雜湊、連線、主機數、目前瀏覽位置、PVE／Docker 資料狀態及顯示程序摘要。Docker 摘要只包含查詢狀態、容器數、新鮮度、年齡及允許的錯誤碼，不列容器明細。SSH 認證失敗、主機金鑰失敗、連線失敗及遠端 Python 失敗使用不同錯誤碼，不回傳原始 stderr。
+
+不包含完整 `/status`、趨勢歷史、MQTT 設定、SSH 密碼或 PVE 密鑰。兩台可讀取帶有版本標記的當前頁面；尚未透過此工具載入的頁面顯示 `loaded_revision: null`。`last_verified_update` 是最後一次載入確認與時間，且必須仍符合目前檔案雜湊；該歷史紀錄不等於即時畫面檢查。
 
 ## 更新正在執行的畫面
 

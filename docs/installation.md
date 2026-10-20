@@ -91,6 +91,8 @@ TrimUI 的 [install-trimui-deps.sh](../browser/install-trimui-deps.sh) 使用 [D
 
 ## TrimUI 按鍵操作
 
+選單入口與實體按鍵位置見 [遊戲機操作圖解](device-controls.md)。
+
 關屏／喚醒鍵以機身標示的 **X 鍵** 為準，對應事件碼 308；沿用目前按鍵設定。
 
 [trimui_monitor.py](../browser/trimui_monitor.py) 依名稱尋找 `TRIMUI Player1`，避免依賴可能變動的 event 節點編號。

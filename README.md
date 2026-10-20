@@ -33,6 +33,32 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 
 安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
 
+## 看圖開啟與操作
+
+先完成安裝，從遊戲機原有選單開啟。點圖可放大；完整步驟與按鍵速查見 [遊戲機操作圖解](docs/device-controls.md)。
+
+### R36 MAX 2：PORTS → Hardware Monitor → A
+
+![R36 MAX 2 實機選單進入監控的三步圖解](docs/images/r36-entry.png)
+
+<details>
+<summary>展開 R36 MAX 2 按鍵標示圖：FN 關屏，Select + B 退出</summary>
+
+![R36 MAX 2 去背機身與監控按鍵功能標示](docs/images/r36-controls.png)
+
+</details>
+
+### TrimUI Smart Pro S：應用 Apps → Hardware Monitor → A
+
+![TrimUI Smart Pro S 實機選單進入監控的三步圖解](docs/images/trimui-entry.png)
+
+<details>
+<summary>展開 TrimUI 按鍵標示圖：X 關屏，Select + Start 退出</summary>
+
+![TrimUI Smart Pro S 去背機身與監控按鍵功能標示，關屏使用實體 X 鍵](docs/images/trimui-controls.png)
+
+</details>
+
 ## 實機畫面
 
 以下為 R36 MAX 2 上擷取的實際畫面，解析度為 1024 × 768。

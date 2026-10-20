@@ -174,6 +174,27 @@ list_view = list_removal.snapshot()
 assert list_view['pve_view'] == 'guests' and list_view['pve_selected'] == 1
 assert list_view['hosts'][0]['virtualization']['guest_count'] == 4
 
+# List selection follows the current index on refresh, then follows guest ID across reorder.
+selection = Monitor()
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+selection.action('detail', now)
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    selection.action(direction, now)
+selection.action('detail', now)
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 1)
+selection.action('down', now + 1)
+assert selection.snapshot()['pve_selected'] == 1
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 2)
+selection_view = selection.snapshot()
+assert selection_view['pve_selected'] == 1
+selected_id = selection_view['hosts'][0]['virtualization']['guests'][selection_view['pve_selected']]['id']
+reordered = json.loads(json.dumps(message))
+reordered['virtualization']['observed_at'] = time.time()
+reordered['virtualization']['guests'].reverse()
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(reordered), now=now + 3)
+selection_view = selection.snapshot()
+assert selection_view['hosts'][0]['virtualization']['guests'][selection_view['pve_selected']]['id'] == selected_id
+
 # A migrated guest keeps its cluster/type/VMID identity and appears under its new node only after both observations complete.
 migration = Monitor()
 assert migration.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)

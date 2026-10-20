@@ -221,10 +221,11 @@ class Monitor:
                             guests = current_virtualization.get('guests', [])
                             old_ids = [guest['id'] for guest in old_guests]
                             guest_ids = [guest['id'] for guest in guests]
-                            selected_guest_id = getattr(self, 'pve_guest_id', None)
-                            if selected_guest_id is None and self.pve_index < len(old_ids):
-                                selected_guest_id = old_ids[self.pve_index]
                             if self.detail == host and self.pve_view in ('guests', 'guest'):
+                                selected_guest_id = (getattr(self, 'pve_guest_id', None) if self.pve_view == 'guest'
+                                                     else old_ids[self.pve_index] if self.pve_index < len(old_ids) else None)
+                                if selected_guest_id is None and self.pve_index < len(old_ids):
+                                    selected_guest_id = old_ids[self.pve_index]
                                 if selected_guest_id in guest_ids:
                                     self.pve_index = guest_ids.index(selected_guest_id)
                                     self.pve_guest_id = selected_guest_id

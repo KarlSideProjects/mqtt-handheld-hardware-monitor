@@ -26,7 +26,7 @@ Turn supported Linux handhelds into MQTT hardware monitoring dashboards for mult
 ## 使用前需要
 
 1. 一台上表支援的掌機，連接網路與電源。
-2. 被監控的 Windows 或 Linux 電腦，安裝 [hwmonitor-mqtt 資料採集程式](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始)。
+2. 被監控的 Windows 或 Linux 電腦，安裝 [hwmonitor-mqtt 資料採集程式](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始)。
 3. 可連線的 MQTT broker，負責將電腦資料傳給掌機。
 
 資料流程：**電腦採集程式 → MQTT broker → 掌機監控畫面**。本倉庫提供掌機顯示端與安裝腳本；電腦採集端及 broker 需另行準備。
@@ -137,9 +137,9 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 被監控電腦上的 Agent → MQTT broker → 掌機本機服務 → 共用監控網頁
 ```
 
-本專案相容 [hwmonitor-mqtt](https://github.com/jhihweijhan/hwmonitor-mqtt) 的資料格式，預設訂閱 `sys/agents/+/metrics`。每台電腦使用不同的 `host` 名稱，掌機就會自動建立對應項目。
+本專案相容 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 的資料格式，預設訂閱 `sys/agents/+/metrics`。每台電腦使用不同的 `host` 名稱，掌機就會自動建立對應項目。
 
-先依 [hwmonitor-mqtt 的安裝說明](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
+先依 [hwmonitor-mqtt 的安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
 
 ## 安裝到掌機
 
@@ -271,6 +271,6 @@ bash -n browser/install.sh browser/client.sh browser/xserver.sh 'browser/Hardwar
 
 ## 授權與相關專案
 
-程式碼採用 [GNU GPL v3](LICENSE)。本專案連接 [hwmonitor-mqtt](https://github.com/jhihweijhan/hwmonitor-mqtt) 的監控資料，掌機系統來自 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone)。
+程式碼採用 [GNU GPL v3](LICENSE)。本專案連接 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 的監控資料，掌機系統來自 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone)。
 
 漫畫晶片圖示與監控頁面原始碼位於 [browser/assets](browser/assets) 與 [browser/monitor.html](browser/monitor.html)。Ports 截圖中的 EmulationStation 介面使用 [es-theme-switch](https://github.com/Jetup13/es-theme-switch)，其第三方元件依原專案授權；本儲存庫不包含完整遊戲系統或其二進位套件。

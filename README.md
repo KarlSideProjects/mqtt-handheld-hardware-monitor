@@ -16,8 +16,8 @@
 | R36 MAX 2 | dArkOS4Clone／Debian 13 ARM64 | 已實機驗證 |
 | TrimUI Smart Pro S | 原廠 Buildroot ARM64 | 實驗支援，長時間穩定性待驗收 |
 
-<details>
-<summary>展開實機畫面與按鍵圖</summary>
+<details open>
+<summary>實機畫面與按鍵圖</summary>
 
 ![R36 MAX 2 實機選單進入監控的三步圖解](docs/images/r36-entry.png)
 

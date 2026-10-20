@@ -170,7 +170,7 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 
 ### 在被監看機自動下載安裝
 
-以下命令在被監看的電腦執行。安裝入口會下載採集端、引導設定 MQTT，並呼叫對應平台的安裝模組；不需要先 clone 專案。再次執行會保留既有設定。
+以下命令在被監看的電腦執行。安裝入口會下載採集端、引導設定 MQTT，並呼叫對應平台的安裝模組；不需要先 clone 專案。Linux／PVE 再次執行會更新下載目錄中的程式，保留既有設定。
 
 Linux／PVE：使用 root 終端執行，需先有 wget 或 curl；指令會先嘗試 wget，失敗時改用 curl。一般 Linux 可先執行 `sudo -i`。
 
@@ -184,7 +184,7 @@ Windows：使用「系統管理員」PowerShell 執行。
 irm https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/refs/heads/master/bootstrap.ps1 -ErrorAction Stop | iex
 ```
 
-PVE 需提供唯讀 API token 與可信 CA；缺少設定時，入口會建立私有設定範本並停止，完成設定後重跑同一命令。看到 `PVE sender is not installed yet` 代表採集服務尚未安裝完成，此時 R36 不會收到 CT／VM 清單。平台依賴、設定位置與驗證限制請看[採集端安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+PVE 安裝模組會準備本機節點名稱與服務可讀的 CA，API token 仍需自行建立並填入 `/etc/hwmonitor-mqtt/pve.env`。缺少有效設定或存在舊 `sys-agent` 容器時，入口會停止。看到 `PVE sender is not installed yet` 代表本次採集服務尚未安裝完成。填好設定後重跑同一下載命令；舊 Docker sender 的遷移與回復步驟見[採集端安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
 
 若 PVE 企業套件庫回傳 `401 Unauthorized`，下載後的 bootstrap 會提示索引更新失敗，再嘗試安裝缺少的必要套件；必要套件仍無法安裝時就會停止。此流程保留原有套件庫設定及 APT 驗證；企業庫授權需求見 [Proxmox 官方說明](https://pve.proxmox.com/wiki/Package_Repositories#sysadmin_enterprise_repo)。
 

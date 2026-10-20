@@ -16,6 +16,7 @@ assert state.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=n
 snapshot = state.snapshot()
 assert snapshot['count'] == 1 and snapshot['hosts'][0]['host'] == 'pve-node-a'
 assert snapshot['hosts'][0]['virtualization']['guests'][0]['id'] == 'lab:qemu:100'
+assert snapshot['hosts'][0]['virtualization']['guests'][1]['status'] == 'stopped'
 state.action('detail', now)
 assert state.snapshot()['detail'] == 'pve-node-a'
 state.action('detail', now)
@@ -128,8 +129,10 @@ unknown['virtualization']['guests'][0]['uptime'] = None
 unknown['virtualization']['guests'][0]['vcpus'] = None
 unknown['virtualization']['guests'][1].pop('uptime')
 unknown['virtualization']['guests'][1].pop('vcpus')
+unknown['virtualization']['guests'][1]['status'] = 'unknown'
 assert state.receive('sys/agents/pve-node-a/metrics', json.dumps(unknown), now=now + 2)
 assert state.snapshot()['hosts'][0]['virtualization']['guests'][0]['vcpus'] is None
+assert state.snapshot()['hosts'][0]['virtualization']['guests'][1]['status'] == 'unknown'
 unconfigured = dict(version=1, provider='pve', cluster_id=None, node=None, observed_at=None, status='unconfigured')
 first_config = Monitor()
 assert first_config.receive('sys/agents/unconfigured/metrics', json.dumps(dict(host='unconfigured', ts=time.time(), virtualization=unconfigured)), now=now)
@@ -162,6 +165,105 @@ old['virtualization']['observed_at'] = time.time() - 31
 aged = Monitor()
 assert aged.receive('sys/agents/pve-node-a/metrics', json.dumps(old), now=now)
 assert not aged.snapshot()['hosts'][0]['virtualization']['fresh']
+
+# API errors and host heartbeats cannot turn an old observation into fresh inventory.
+cached = Monitor()
+old_observation = json.loads(json.dumps(message))
+old_observation['virtualization']['observed_at'] = time.time() - 31
+assert cached.receive('sys/agents/pve-node-a/metrics', json.dumps(old_observation), now=now)
+assert cached.receive('sys/agents/pve-node-a/metrics', json.dumps(dict(old_observation, ts=time.time())), now=now + 1)
+cached_view = cached.snapshot()['hosts'][0]['virtualization']
+assert not cached_view['fresh'] and cached_view['status'] == 'ok'
+assert cached.receive('sys/agents/pve-node-a/metrics', json.dumps(dict(old_observation, virtualization=failed)), now=now + 2)
+cached_view = cached.snapshot()['hosts'][0]['virtualization']
+assert not cached_view['fresh'] and cached_view['status'] == 'error'
+recovered = json.loads(json.dumps(message))
+recovered['virtualization']['observed_at'] = time.time()
+recovered['virtualization']['guests'] = recovered['virtualization']['guests'][:1]
+assert cached.receive('sys/agents/pve-node-a/metrics', json.dumps(recovered), now=now + 3)
+cached_view = cached.snapshot()['hosts'][0]['virtualization']
+assert cached_view['fresh'] and cached_view['status'] == 'ok' and cached_view['guest_count'] == 1
+
+# A delayed complete inventory cannot restore a guest removed by a newer observation.
+ordered = Monitor()
+newer = json.loads(json.dumps(message))
+newer['virtualization']['observed_at'] = time.time()
+newer['virtualization']['guests'] = newer['virtualization']['guests'][:1]
+older = json.loads(json.dumps(message))
+older['virtualization']['observed_at'] = newer['virtualization']['observed_at'] - 10
+assert ordered.receive('sys/agents/pve-node-a/metrics', json.dumps(newer), now=now)
+assert ordered.receive('sys/agents/pve-node-a/metrics', json.dumps(older), now=now + 1)
+ordered_view = ordered.snapshot()['hosts'][0]['virtualization']
+assert ordered_view['guest_count'] == 1 and ordered_view['observed_at'] == newer['virtualization']['observed_at']
+
+# Losing the parent host closes the PVE route and returns to the overview.
+offline = Monitor()
+assert offline.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+offline.action('detail', now)
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    offline.action(direction, now)
+offline.action('detail', now)
+assert offline.snapshot()['pve_view'] == 'guests'
+offline.action('up', now + 11)
+offline_view = offline.snapshot()
+assert offline_view['count'] == 0 and offline_view['detail'] is None and offline_view['pve_view'] is None
+
+# Removing the selected list entry keeps the current selection on a surviving guest.
+list_removal = Monitor()
+assert list_removal.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+list_removal.action('detail', now)
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    list_removal.action(direction, now)
+list_removal.action('detail', now)
+list_removal.action('down', now)
+assert list_removal.snapshot()['pve_selected'] == 1
+reduced = json.loads(json.dumps(message))
+reduced['virtualization']['observed_at'] = time.time()
+reduced['virtualization']['guests'] = [guest for guest in reduced['virtualization']['guests'] if guest['id'] != 'lab:lxc:101']
+assert list_removal.receive('sys/agents/pve-node-a/metrics', json.dumps(reduced), now=now + 1)
+list_view = list_removal.snapshot()
+assert list_view['pve_view'] == 'guests' and list_view['pve_selected'] == 1
+assert list_view['hosts'][0]['virtualization']['guest_count'] == 4
+
+# List selection follows the current index on refresh, then follows guest ID across reorder.
+selection = Monitor()
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+selection.action('detail', now)
+for direction in ('right', 'right', 'down', 'down', 'right'):
+    selection.action(direction, now)
+selection.action('detail', now)
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 1)
+selection.action('down', now + 1)
+assert selection.snapshot()['pve_selected'] == 1
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now + 2)
+selection_view = selection.snapshot()
+assert selection_view['pve_selected'] == 1
+selected_id = selection_view['hosts'][0]['virtualization']['guests'][selection_view['pve_selected']]['id']
+reordered = json.loads(json.dumps(message))
+reordered['virtualization']['observed_at'] = time.time()
+reordered['virtualization']['guests'].reverse()
+assert selection.receive('sys/agents/pve-node-a/metrics', json.dumps(reordered), now=now + 3)
+selection_view = selection.snapshot()
+assert selection_view['hosts'][0]['virtualization']['guests'][selection_view['pve_selected']]['id'] == selected_id
+
+# A migrated guest keeps its cluster/type/VMID identity and appears under its new node only after both observations complete.
+migration = Monitor()
+assert migration.receive('sys/agents/pve-node-a/metrics', json.dumps(message), now=now)
+removed_from_node_a = json.loads(json.dumps(message))
+removed_from_node_a['virtualization']['observed_at'] = time.time()
+removed_from_node_a['virtualization']['guests'] = []
+assert migration.receive('sys/agents/pve-node-a/metrics', json.dumps(removed_from_node_a), now=now + 1)
+node_b = json.loads(json.dumps(message))
+node_b['host'] = 'pve-node-b'
+node_b['virtualization']['node'] = 'pve-node-b'
+node_b['virtualization']['observed_at'] = time.time()
+node_b['virtualization']['guests'] = [dict(node_b['virtualization']['guests'][0], node='pve-node-b')]
+assert migration.receive('sys/agents/pve-node-b/metrics', json.dumps(node_b), now=now + 2)
+migrated = migration.snapshot()
+assert migrated['count'] == 2
+assert migrated['hosts'][0]['virtualization']['guest_count'] == 0
+assert migrated['hosts'][1]['virtualization']['guests'][0]['id'] == 'lab:qemu:100'
+assert migrated['hosts'][1]['virtualization']['guests'][0]['node'] == 'pve-node-b'
 
 # Host-only payloads remain valid and missing initial inventory stays unknown.
 legacy = Monitor()

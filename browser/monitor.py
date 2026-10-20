@@ -213,8 +213,28 @@ class Monitor:
                 entry.update(host=host, seen=now, metrics=metrics)
                 if 'virtualization' in data:
                     try:
+                        previous_virtualization = entry.get('virtualization')
                         entry['virtualization'] = pve.apply_virtualization(
-                            data['virtualization'], entry.get('virtualization'))
+                            data['virtualization'], previous_virtualization)
+                        current_virtualization = entry['virtualization']
+                        if current_virtualization.get('status') == 'ok':
+                            old_guests = previous_virtualization.get('guests', []) if previous_virtualization else []
+                            guests = current_virtualization.get('guests', [])
+                            old_ids = [guest['id'] for guest in old_guests]
+                            guest_ids = [guest['id'] for guest in guests]
+                            if self.detail == host and self.pve_view in ('guests', 'guest'):
+                                selected_guest_id = (getattr(self, 'pve_guest_id', None) if self.pve_view == 'guest'
+                                                     else old_ids[self.pve_index] if self.pve_index < len(old_ids) else None)
+                                if selected_guest_id is None and self.pve_index < len(old_ids):
+                                    selected_guest_id = old_ids[self.pve_index]
+                                if selected_guest_id in guest_ids:
+                                    self.pve_index = guest_ids.index(selected_guest_id)
+                                    self.pve_guest_id = selected_guest_id
+                                elif selected_guest_id in old_ids:
+                                    if self.pve_view == 'guest':
+                                        self.pve_view = 'guests'
+                                    self.pve_index = min(self.pve_index, max(0, len(guests) - 1))
+                                    self.pve_guest_id = guest_ids[self.pve_index] if guests else None
                     except (ValueError, TypeError, OverflowError, RecursionError):
                         self.bad_messages += 1
                 entry['history'].append({key: metrics[key] for key in
@@ -244,6 +264,7 @@ class Monitor:
                 self.detail = None
                 self.focus = None
                 self.pve_view = None
+                self.pve_guest_id = None
                 self.panel = 0
             elif self.panel >= len(SECTIONS) and not self.hosts[self.detail].get('virtualization'):
                 self.panel = 0

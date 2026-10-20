@@ -109,6 +109,9 @@ def apply_virtualization(raw, previous=None):
         ids = [item['id'] for item in parsed]
         if len(set(ids)) != len(ids):
             raise ValueError('Duplicate PVE guest')
+        if (previous and previous.get('cluster_id') == cluster_id and previous.get('node') == node
+                and previous.get('observed_at') is not None and observed < previous['observed_at']):
+            return previous
         previous_guests = {item['id']: item for item in (previous or {}).get('guests', [])}
         previous_observed = (previous or {}).get('observed_at')
         is_new_observation = previous_observed is None or observed > previous_observed

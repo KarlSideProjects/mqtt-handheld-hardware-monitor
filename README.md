@@ -35,6 +35,7 @@ MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我�
 - **使用掌機按鍵操作：** 選取電腦、切換資訊頁、返回或退出，保留原本的遊戲選單。
 - **單鍵關屏與喚醒：** R36 使用 FN，TrimUI 使用 X；關屏時 MQTT 繼續接收資料。
 - **查看掌機自身狀態：** 顯示本機 CPU、記憶體、溫度與電池資訊；無法取得的資料以橫線表示。
+- **瀏覽 PVE 客機：** 從 PVE 主機開啟 CT／VM 清單及詳情，查看 vCPU、PVE RAM、網路／磁碟速率與有效觀測趨勢；使用 A/B 逐層瀏覽，詳情中用 L1／R1 切換同一主機的客機。
 
 ## 目前支援的硬體
 
@@ -57,7 +58,7 @@ MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我�
 
 安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
 
-[PVE、CT／VM 監控研究與模組化規劃](docs/pve-monitoring-research.md)涵蓋系統辨識、平台安裝模組及父子資源瀏覽，目前為提案，尚未實作。
+PVE 客機清單、詳情、速率與趨勢已加入顯示端。採集端安裝及唯讀 API 設定請依[官方採集端專案](https://github.com/KarlSideProjects/hwmonitor-mqtt)操作；本功能尚未在實際 PVE 主機或兩台掌機上驗收。[研究與模組設計](docs/pve-monitoring-research.md)記錄資料來源、限制及尚待實機確認的項目。
 
 ## 看圖開啟與操作
 
@@ -281,13 +282,14 @@ python3 browser/test_trimui_browser.py
 python3 browser/test_trimui_power.py
 python3 browser/test_monitor.py
 python3 browser/test_monitor_events.py
+python3 browser/test_pve.py
 python3 browser/test_menu.py
 python3 browser/test_device_info.py
 node browser/test_monitor_ui.cjs
 bash -n browser/install.sh browser/client.sh browser/xserver.sh 'browser/Hardware Monitor.sh'
 ```
 
-版面測試需要 Node.js 與 Playwright，可執行 `node browser/test_monitor_layout.cjs`。在已開啟監控的掌機上，`measure_startup.py`、`measure_input.py` 與 `test_awake.py` 分別检查啟動等待、按鍵到畫面的延遲，以及常亮設定。
+版面測試需要 Node.js 與 Playwright，可執行 `node browser/test_monitor_layout.cjs`；PVE 版面可在 1024 × 768 與 1280 × 720 檢查。這些瀏覽器測試不代表已連接 PVE API 或實機掌機驗收。在已開啟監控的掌機上，`measure_startup.py`、`measure_input.py` 與 `test_awake.py` 分別檢查啟動等待、按鍵到畫面的延遲，以及常亮設定。
 
 ## 授權與相關專案
 

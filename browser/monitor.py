@@ -177,6 +177,7 @@ class Monitor:
         self.detail = None
         self.pve_view = None
         self.pve_index = 0
+        self.pve_guest_id = None
         self.focus = None
         self.panel = 0
         self.scroll = 0
@@ -273,16 +274,41 @@ class Monitor:
                 return
             self.tick(now)
             order = list(self.hosts)
-            if self.pve_view == 'guests' and self.detail in self.hosts:
+            if self.pve_view in ('guests', 'guest') and self.detail in self.hosts:
                 virtualization = self.hosts[self.detail].get('virtualization')
                 guests = virtualization.get('guests', []) if virtualization else []
+                if self.pve_view == 'guest':
+                    self.pve_index = next((i for i, guest in enumerate(guests)
+                                           if guest['id'] == self.pve_guest_id), self.pve_index)
+                    if not guests or not any(guest['id'] == self.pve_guest_id for guest in guests):
+                        self.pve_view = 'guests'
+                        self.pve_guest_id = None
+                if self.pve_view == 'guest':
+                    if action == 'back':
+                        self.pve_view = 'guests'
+                        self.pve_guest_id = None
+                    elif action in ('previous', 'next') and guests:
+                        self.pve_index = (self.pve_index + (1 if action == 'next' else -1)) % len(guests)
+                        self.pve_guest_id = guests[self.pve_index]['id']
+                    else:
+                        return
+                    self.paused = True
+                    self.version += 1
+                    self.changed.notify_all()
+                    return
                 if action == 'back':
                     self.pve_view = None
                     self.pve_index = 0
+                    self.pve_guest_id = None
+                elif action == 'detail' and guests:
+                    self.pve_guest_id = guests[self.pve_index % len(guests)]['id']
+                    self.pve_view = 'guest'
                 elif action in ('up', 'down') and guests:
                     self.pve_index = (self.pve_index + (1 if action == 'down' else -1)) % len(guests)
+                    self.pve_guest_id = guests[self.pve_index]['id']
                 elif action in ('previous', 'next'):
                     self.pve_index = max(0, min(max(0, len(guests) - 1), self.pve_index + (-4 if action == 'previous' else 4)))
+                    self.pve_guest_id = guests[self.pve_index]['id'] if guests else None
                 else:
                     return
                 self.paused = True
@@ -306,6 +332,8 @@ class Monitor:
             elif action == 'pve' and self.detail is not None and self.hosts[self.detail].get('virtualization'):
                 self.pve_view = 'guests'
                 self.pve_index = 0
+                guests = self.hosts[self.detail]['virtualization'].get('guests', [])
+                self.pve_guest_id = guests[0]['id'] if guests else None
                 self.paused = True
             elif order:
                 index = order.index(self.selected)
@@ -359,6 +387,8 @@ class Monitor:
                         if self.panel == len(SECTIONS) and self.hosts[self.detail].get('virtualization'):
                             self.pve_view = 'guests'
                             self.pve_index = 0
+                            guests = self.hosts[self.detail]['virtualization'].get('guests', [])
+                            self.pve_guest_id = guests[0]['id'] if guests else None
                         else:
                             self.focus = SECTIONS[self.panel]
                     self.scroll = 0
@@ -379,6 +409,7 @@ class Monitor:
                     'screen_off': bool(self.screen and self.screen.asleep),
                     'focus': self.focus, 'pve_view': self.pve_view,
                     'pve_page': self.pve_index // 4, 'pve_selected': self.pve_index,
+                    'pve_guest_id': self.pve_guest_id,
                     'panel': ('pve' if self.panel == len(SECTIONS) and self.detail and self.hosts[self.detail].get('virtualization') else SECTIONS[self.panel]), 'item_page': self.item_page,
                     'selected': self.selected, 'page': page + 1, 'pages': max(1, (len(order) + 2) // 3),
                     'count': len(order), 'bad_messages': self.bad_messages,

@@ -96,6 +96,12 @@ malformed = json.loads(json.dumps(message))
 malformed['virtualization']['guests'][0]['network_io']['total'] = []
 assert state.receive('sys/agents/pve-node-a/metrics', json.dumps(malformed), now=now + 4)
 assert len(state.snapshot()['hosts'][0]['virtualization']['guests']) == 5
+huge_number = json.loads(json.dumps(message))
+huge_number['virtualization']['guests'][0]['memory']['ram']['used'] = 10**1000
+bad_before_huge = state.snapshot()['bad_messages']
+assert state.receive('sys/agents/pve-node-a/metrics', json.dumps(huge_number), now=now + 4)
+assert state.snapshot()['bad_messages'] == bad_before_huge + 1
+assert len(state.snapshot()['hosts'][0]['virtualization']['guests']) == 5
 wrong_version = json.loads(json.dumps(message))
 wrong_version['virtualization']['version'] = True
 assert state.receive('sys/agents/pve-node-a/metrics', json.dumps(wrong_version), now=now + 5)

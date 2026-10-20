@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Diagnose or update a running handheld UI over authenticated SSH."""
+"""Diagnose, update or safely restart a handheld dashboard over authenticated SSH."""
 import argparse
 import contextlib
 import json
@@ -41,9 +41,18 @@ def ssh_environment():
         yield env
 
 
+def ssh_failure(result):
+    stderr = result.stderr.lower()
+    if 'host key verification failed' in stderr or 'remote host identification has changed' in stderr:
+        return 'ssh_host_key_failed'
+    if 'permission denied' in stderr or 'authentication failed' in stderr:
+        return 'ssh_authentication_failed'
+    return 'ssh_connection_failed'
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('diagnose', 'update'))
+    parser.add_argument('action', choices=('diagnose', 'update', 'restart'))
     parser.add_argument('--device', choices=('r36', 'trimui'), required=True)
     parser.add_argument('--host', required=True)
     parser.add_argument('--user')
@@ -58,11 +67,13 @@ def main(argv=None):
                                   bool(env.get('HWMONITOR_SSH_PASSWORD')))
             source = (ROOT / 'browser/device_ops.py').read_text() + '\nremote_main()\n'
             result = subprocess.run(command + ['python3 -c ' + shlex.quote(source)],
-                                    input=json.dumps(request), capture_output=True, text=True, env=env, timeout=75)
+                                    input=json.dumps(request), capture_output=True, text=True, env=env, timeout=180 if args.action == 'restart' else 75)
+        if result.returncode == 255:
+            raise OpsError(ssh_failure(result))
         try:
             response = json.loads(result.stdout)
         except ValueError:
-            raise OpsError('ssh_or_remote_python_failed') from None
+            raise OpsError('remote_python_failed' if result.returncode else 'invalid_remote_response') from None
         if not isinstance(response, dict) or not isinstance(response.get('ok'), bool):
             raise OpsError('invalid_remote_response')
         print(json.dumps(response, ensure_ascii=False, indent=2))

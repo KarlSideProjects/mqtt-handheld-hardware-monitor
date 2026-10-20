@@ -15,10 +15,15 @@ LOCAL_TESTS = (
     'test_monitor.py',
     'test_monitor_events.py',
     'test_pve.py',
+    'test_docker.py',
     'test_menu.py',
     'test_device_info.py',
     'test_check_runner.py',
     'test_device_ops.py',
+    'test_device_cli.py',
+    'test_device_restart.py',
+    'test_checkout.py',
+    'test_release.py',
 )
 
 

@@ -89,7 +89,7 @@ MONITOR_VIEWPORT='{"width":1280,"height":720}' node browser/test_monitor_layout.
 MONITOR_VIEWPORT='{"width":1279,"height":719}' node browser/test_monitor_layout.cjs
 ```
 
-下列矩陣包含已執行項目與待擴充情境；目前完成的是兩台掌機尺寸、1279 × 719 及零／兩／四張 GPU 的版面檢查，其餘 CI 整合仍待實作。尺寸依 [README 實機畫面](../README.md#實機畫面) 及 [TrimUI 實測顯示模式](trimui-smart-pro-s-research.md#2-實機與官方依據)；瀏覽器實際 viewport 仍需在裝置量測。
+下列矩陣包含已執行項目與待擴充情境；目前完成的是兩台掌機尺寸、1279 × 719 及零／兩／四張 GPU 的版面檢查，其餘 CI 整合仍待實作。尺寸依 [使用指南實機畫面](user-guide.md#實機畫面) 及 [TrimUI 實測顯示模式](trimui-smart-pro-s-research.md#2-實機與官方依據)；瀏覽器實際 viewport 仍需在裝置量測。
 
 | 測試情境 | 輸入 | 必須檢查 |
 | --- | --- | --- |

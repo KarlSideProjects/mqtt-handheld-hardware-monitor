@@ -175,6 +175,7 @@ class Monitor:
         self.hosts = {}
         self.selected = None
         self.detail = None
+        self.resource_provider = 'pve'
         self.pve_view = None
         self.pve_index = 0
         self.pve_guest_id = None
@@ -211,18 +212,20 @@ class Monitor:
                     return False
                 entry = self.hosts.setdefault(host, {'history': deque(maxlen=60)})
                 entry.update(host=host, seen=now, metrics=metrics)
-                if 'virtualization' in data:
+                for provider, resource_key in (('pve', 'virtualization'), ('docker', 'docker')):
+                    if resource_key not in data:
+                        continue
                     try:
-                        previous_virtualization = entry.get('virtualization')
-                        entry['virtualization'] = pve.apply_virtualization(
-                            data['virtualization'], previous_virtualization)
-                        current_virtualization = entry['virtualization']
+                        previous_virtualization = entry.get(resource_key)
+                        entry[resource_key] = pve.apply_virtualization(
+                            data[resource_key], previous_virtualization, provider=provider)
+                        current_virtualization = entry[resource_key]
                         if current_virtualization.get('status') == 'ok':
                             old_guests = previous_virtualization.get('guests', []) if previous_virtualization else []
                             guests = current_virtualization.get('guests', [])
                             old_ids = [guest['id'] for guest in old_guests]
                             guest_ids = [guest['id'] for guest in guests]
-                            if self.detail == host and self.pve_view in ('guests', 'guest'):
+                            if self.detail == host and self.resource_provider == provider and self.pve_view in ('guests', 'guest'):
                                 selected_guest_id = (getattr(self, 'pve_guest_id', None) if self.pve_view == 'guest'
                                                      else old_ids[self.pve_index] if self.pve_index < len(old_ids) else None)
                                 if selected_guest_id is None and self.pve_index < len(old_ids):
@@ -253,6 +256,19 @@ class Monitor:
                 self.bad_messages += 1
             return False
 
+    def sections(self):
+        host = self.hosts.get(self.detail, {})
+        return SECTIONS + tuple(name for name, key in (('pve', 'virtualization'), ('docker', 'docker')) if host.get(key))
+
+    def open_resources(self, provider):
+        self.resource_provider = provider
+        self.pve_view = 'guests'
+        self.pve_index = 0
+        key = 'virtualization' if provider == 'pve' else 'docker'
+        guests = self.hosts[self.detail][key].get('guests', [])
+        self.pve_guest_id = guests[0]['id'] if guests else None
+        self.paused = True
+
     def tick(self, now=None):
         now = time.monotonic() if now is None else now
         with self.lock:
@@ -266,7 +282,7 @@ class Monitor:
                 self.pve_view = None
                 self.pve_guest_id = None
                 self.panel = 0
-            elif self.panel >= len(SECTIONS) and not self.hosts[self.detail].get('virtualization'):
+            elif self.panel >= len(self.sections()):
                 self.panel = 0
                 self.focus = None
                 self.pve_view = None
@@ -296,7 +312,7 @@ class Monitor:
             self.tick(now)
             order = list(self.hosts)
             if self.pve_view in ('guests', 'guest') and self.detail in self.hosts:
-                virtualization = self.hosts[self.detail].get('virtualization')
+                virtualization = self.hosts[self.detail].get('virtualization' if self.resource_provider == 'pve' else 'docker')
                 guests = virtualization.get('guests', []) if virtualization else []
                 if self.pve_view == 'guest':
                     self.pve_index = next((i for i, guest in enumerate(guests)
@@ -351,12 +367,8 @@ class Monitor:
                     self.detail = None
                 self.scroll = 0
                 self.paused = True
-            elif action == 'pve' and self.detail is not None and self.hosts[self.detail].get('virtualization'):
-                self.pve_view = 'guests'
-                self.pve_index = 0
-                guests = self.hosts[self.detail]['virtualization'].get('guests', [])
-                self.pve_guest_id = guests[0]['id'] if guests else None
-                self.paused = True
+            elif action in ('pve', 'docker') and self.detail is not None and self.hosts[self.detail].get('virtualization' if action == 'pve' else 'docker'):
+                self.open_resources(action)
             elif order:
                 index = order.index(self.selected)
                 if action.startswith('focus:') and self.detail is not None and action[6:] in SECTIONS:
@@ -370,7 +382,7 @@ class Monitor:
                 elif action in ('previous', 'next') and self.detail is not None:
                     self.selected = order[(index + (1 if action == 'next' else -1)) % len(order)]
                     self.detail = self.selected
-                    if self.panel >= len(SECTIONS) and not self.hosts[self.detail].get('virtualization'):
+                    if self.panel >= len(self.sections()):
                         self.panel = 0
                         self.focus = None
                     self.pve_view = None
@@ -383,11 +395,11 @@ class Monitor:
                     self.scroll = 0
                 elif action in ('up', 'down', 'left', 'right') and self.detail is not None:
                     if self.focus is None:
-                        has_pve = bool(self.hosts[self.detail].get('virtualization'))
-                        neighbors = ({'up': {3: 0, 4: 1, 5: 3, 6: 3, 7: 4},
-                                      'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 6},
-                                      'left': {1: 0, 2: 1, 4: 3, 6: 5, 7: 6},
-                                      'right': {0: 1, 1: 2, 3: 4, 5: 6, 6: 7}} if has_pve else
+                        has_pve = len(self.sections()) > len(SECTIONS)
+                        neighbors = ({'up': {3: 0, 4: 1, 5: 3, 6: 3, 7: 4, 8: 4},
+                                      'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 7},
+                                      'left': {1: 0, 2: 1, 4: 3, 6: 5, 7: 6, 8: 7},
+                                      'right': {0: 1, 1: 2, 3: 4, 5: 6, 6: 7, 7: min(8, len(self.sections())-1)}} if has_pve else
                                      {'up': {3: 0, 4: 2, 5: 3, 6: 4},
                                       'down': {0: 3, 1: 3, 2: 4, 3: 5, 4: 6},
                                       'left': {1: 0, 2: 1, 4: 3, 6: 5},
@@ -406,11 +418,8 @@ class Monitor:
                         self.detail = self.selected
                         self.panel = 0
                     elif self.focus is None:
-                        if self.panel == len(SECTIONS) and self.hosts[self.detail].get('virtualization'):
-                            self.pve_view = 'guests'
-                            self.pve_index = 0
-                            guests = self.hosts[self.detail]['virtualization'].get('guests', [])
-                            self.pve_guest_id = guests[0]['id'] if guests else None
+                        if self.panel >= len(SECTIONS):
+                            self.open_resources(self.sections()[self.panel])
                         else:
                             self.focus = SECTIONS[self.panel]
                     self.scroll = 0
@@ -429,14 +438,14 @@ class Monitor:
             visible = [self.detail] if self.detail else order[page * 3:page * 3 + 3]
             return {'device': self.device.sample(), 'connection': self.connection, 'paused': self.paused, 'detail': self.detail,
                     'screen_off': bool(self.screen and self.screen.asleep),
-                    'focus': self.focus, 'pve_view': self.pve_view,
+                    'focus': self.focus, 'pve_view': self.pve_view, 'resource_provider': self.resource_provider,
                     'pve_page': self.pve_index // 4, 'pve_selected': self.pve_index,
                     'pve_guest_id': self.pve_guest_id,
-                    'panel': ('pve' if self.panel == len(SECTIONS) and self.detail and self.hosts[self.detail].get('virtualization') else SECTIONS[self.panel]), 'item_page': self.item_page,
+                    'panel': self.sections()[self.panel], 'item_page': self.item_page,
                     'selected': self.selected, 'page': page + 1, 'pages': max(1, (len(order) + 2) // 3),
                     'count': len(order), 'bad_messages': self.bad_messages,
                     'scroll': self.scroll,
-                    'hosts': [{k: (list(v) if self.detail else [{'cpu': sample['cpu'], 'ram': sample['ram']} for sample in v]) if k == 'history' else (pve.snapshot_virtualization(v) if k == 'virtualization' else v) for k, v in self.hosts[h].items() if k != 'seen'}
+                    'hosts': [{k: (list(v) if self.detail else [{'cpu': sample['cpu'], 'ram': sample['ram']} for sample in v]) if k == 'history' else (pve.snapshot_virtualization(v) if k in ('virtualization', 'docker') else v) for k, v in self.hosts[h].items() if k != 'seen'}
                               for h in visible]}
 
 
@@ -629,7 +638,7 @@ def handler(state):
                     raise ValueError('Invalid body size')
                 self.connection.settimeout(3)
                 action = json.loads(self.rfile.read(size)).get('action')
-                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS} | {'pve'}:
+                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS} | {'pve', 'docker'}:
                     raise ValueError('Invalid action')
                 state.action(action)
                 self.respond(b'{}', 'application/json')

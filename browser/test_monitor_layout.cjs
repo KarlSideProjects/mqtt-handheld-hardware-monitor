@@ -83,6 +83,36 @@ const server=http.createServer((req,res)=>{
   const largeFlows=await page.locator('.pve-reading strong').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
   assert.ok(largeFlows.every(x=>x.scroll<=x.width+1),'Large guest I/O readings must retain their units without clipping');
   await page.screenshot({path:path.join(root,'pve-detail-preview.png')});
+
+  // Docker shares the list/detail layout while retaining its own IDs and CPU/RAM semantics.
+  const containers=Array.from({length:5},(_,i)=>({...structuredClone(guest),type:'docker',container_id:String(i).repeat(64),id:'docker:'+String(i).repeat(64),name:i?'same-name':'<img src=x onerror=alert(1)>',status:['running','exited','restarting','created','paused'][i],cpu:{percent_total:250}}));
+  pveHost.docker={provider:'docker',status:'ok',fresh:true,guest_count:5,guests:containers};
+  state.pve_view=null;state.resource_provider='docker';state.panel='docker';
+  await page.reload();await page.locator('[data-section=docker]').waitFor();await fits();
+  assert.equal(await page.locator('[data-section=pve]').count(),1);
+  assert.equal(await page.locator('[data-section=docker]').count(),1);
+  const cards=await page.locator('.distance-detail>.panel').evaluateAll(es=>es.map(e=>{const b=e.getBoundingClientRect();return {top:b.top,bottom:b.bottom,left:b.left,right:b.right}}));
+  assert.equal(cards.length,9);assert.ok(cards.slice(5).every(c=>c.top===cards[5].top),'All four shortcuts must share the bottom row');
+  const shortcuts=await page.locator('.distance-detail>.panel:nth-child(n+6)').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
+  assert.ok(shortcuts.every(c=>c.scroll<=c.width+1),'Both provider entries and normal shortcuts must fit');
+  state.pve_view='guests';state.pve_page=0;state.pve_selected=0;
+  await page.reload();await page.locator('.pve-row').first().waitFor();await fits();
+  assert.ok((await page.locator('.pve-list h2').textContent()).includes('Docker containers'));
+  assert.equal(await page.locator('.pve-row').count(),4);
+  assert.equal(await page.locator('.pve-name img').count(),0);
+  assert.ok((await page.locator('.pve-row').first().textContent()).includes('250.0%'));
+  const ids=await page.locator('.docker-id').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
+  assert.ok(ids.every(c=>c.scroll<=c.width+1),'Docker short IDs must fit');
+  state.pve_view='guest';state.pve_guest_id=containers[0].id;
+  await page.reload();await page.locator('.pve-detail').waitFor();await fits();
+  assert.ok((await page.locator('.pve-title').textContent()).includes('Docker 000000000000'));
+  assert.ok((await page.locator('.pve-memory-reading small').textContent()).includes('Cache excluded'));
+  const dockerReadings=await page.locator('.pve-reading strong').evaluateAll(es=>es.map(e=>({width:e.clientWidth,scroll:e.scrollWidth})));
+  assert.ok(dockerReadings.every(c=>c.scroll<=c.width+1),'Docker readings must fit');
+  await page.screenshot({path:path.join(root,'docker-detail-preview.png')});
+  state.pve_view=null;delete pveHost.virtualization;
+  await page.reload();await page.locator('[data-section=docker]').waitFor();await fits();
+  assert.equal(await page.locator('[data-section=pve]').count(),0,'Docker-only host must not invent a PVE entry');
   if(actual){for(const item of actual.hosts){state.detail=item.host;state.hosts=[item];state.selected=item.host;await page.reload();await page.locator('.detail-grid').waitFor();await fits();for(const section of ['cpu','gpu','memory','network','disks','temperatures','history']){state.focus=section;await page.reload();await page.waitForFunction(()=>document.getElementById('main').innerHTML.length>0);await fits()}state.focus=null}}
   assert.deepEqual(errors,[]);console.log(`PASS: ${viewport.width}×${viewport.height}, no scrolling or clipping, distance readings 64/48px, drill-down cores, 0/2/4 GPUs, three-host overview`);
  }finally{await browser.close();server.closeAllConnections();server.close()}

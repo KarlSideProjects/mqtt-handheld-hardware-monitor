@@ -2,18 +2,24 @@
 # Run on the handheld as ark: bash browser/install.sh [--config /path/to/mqtt.json]
 set -euo pipefail
 source_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+for arg in "$@"; do
+    if [[ $arg == --ssh ]]; then exec bash "$source_dir/install-remote.sh" r36 "$@"; fi
+done
 app=/home/ark/device-browser
 config=
 check=0
+deps_only=0
 fail() { echo "ERROR: $*" >&2; exit 1; }
 while (($#)); do
     case "$1" in
         --config) [[ $# -ge 2 ]] || fail '--config requires a JSON file'; config=$2; shift 2 ;;
         --check) check=1; shift ;;
-        --help) echo 'Usage: bash browser/install.sh [--config FILE | --check]'; exit ;;
+        --deps-only) deps_only=1; shift ;;
+        --help) echo 'Usage: bash browser/install.sh [--ssh HOST [--user USER]] [--config FILE | --check | --deps-only]'; exit ;;
         *) fail "Unknown argument: $1" ;;
     esac
 done
+((check == 0 || deps_only == 0)) || fail 'Choose --check or --deps-only.'
 [[ $(id -un) == ark ]] || fail 'Log in as ark; do not run this script with sudo.'
 [[ $(uname -m) == aarch64 ]] || fail 'Requires ARM64 R36 MAX 2.'
 . /etc/os-release
@@ -56,10 +62,11 @@ PY
     fi
 }
 if ((check)); then verify; exit; fi
-[[ -z $config ]] || validate_config "$config"
-[[ -n $config || ! -e $app/mqtt-config.json ]] || validate_config "$app/mqtt-config.json"
-sudo -n true || fail 'Run sudo -v first, then rerun the script.'
-pgrep -u ark -f '^python3 (monitor|device_info)\.py$' >/dev/null && fail 'Exit Hardware Monitor / Device Info with Select + B first.'
+[[ -z $config || -f $config ]] || fail 'MQTT config file not found.'
+sudo -n true || { [[ -t 0 ]] && sudo -v; } || fail 'Run sudo -v first, then rerun the script.'
+if ((deps_only == 0)); then
+    pgrep -u ark -f '^python3 (monitor|device_info)\.py$' >/dev/null && fail 'Exit Hardware Monitor / Device Info with Select + B first.'
+fi
 [[ -f /etc/zram.conf ]] || fail 'This image has no built-in /etc/zram.conf.'
 systemctl cat zram-swap.service >/dev/null || fail 'This image has no built-in zram-swap.service.'
 # Private backup includes MQTT secrets; never upload it to Git.
@@ -83,7 +90,7 @@ cleanup() {
 }
 trap cleanup EXIT
 # Skip package installation when the required packages are already configured.
-packages=(chromium xserver-xorg-core xinit x11-xserver-utils python3-paho-mqtt)
+packages=(chromium chromium-sandbox xserver-xorg-core xinit xauth x11-xserver-utils python3 python3-paho-mqtt ca-certificates fonts-dejavu-core procps util-linux)
 missing=()
 for package in "${packages[@]}"; do
     [[ $(dpkg-query -W -f='${Status}' "$package" 2>/dev/null || true) == 'install ok installed' ]] || missing+=("$package")
@@ -100,6 +107,15 @@ if [[ ! -s $app/lib/libgbm.so.1 ]]; then
      dpkg-deb -x ./libgbm1_*_arm64.deb extracted)
     install -m 644 "$work/extracted/usr/lib/aarch64-linux-gnu/libgbm.so.1" "$app/lib/libgbm.so.1"
 fi
+if ((deps_only)); then
+    python3 -c 'import paho.mqtt.client as m; assert hasattr(m,"CallbackAPIVersion")'
+    echo 'PASS: Chromium/Xorg, sandbox, Python/MQTT, CA certificates, fonts and private GBM installed.'
+    exit
+fi
+[[ -n $config || ! -e $app/mqtt-config.json ]] || config=$app/mqtt-config.json
+setup_args=(--output "$work/mqtt-config.json")
+[[ -z $config ]] || setup_args+=(--config "$config")
+python3 "$source_dir/mqtt_setup.py" "${setup_args[@]}"
 for file in monitor.py device_info.py install-menu.py monitor.html xorg.conf; do
     install -m 644 "$source_dir/$file" "$app/$file"
 done
@@ -107,7 +123,7 @@ for file in client.sh xserver.sh 'Hardware Monitor.sh' 'Device Info.sh'; do
     install -m 755 "$source_dir/$file" "$app/$file"
 done
 install -m 644 "$source_dir/assets/hardware-buddy.svg" "$app/assets/"
-[[ -z $config ]] || install -m 600 "$config" "$app/mqtt-config.json"
+install -m 600 "$work/mqtt-config.json" "$app/mqtt-config.json"
 [[ ! -e $app/mqtt-config.json ]] || chmod 600 "$app/mqtt-config.json"
 sudo loginctl enable-linger ark
 sudo sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/zram.conf

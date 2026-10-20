@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-20",
+  "device": "TrimUI Smart Pro S",
+  "display_path": "headless Chromium CDP JPEG screencast -> native SDL_image/SDL2 accelerated vsync",
+  "chromium": "155.0.8059.79",
+  "viewport": [
+    1280,
+    720
+  ],
+  "physical_lcd_user_confirmed": true,
+  "user_report": "已有畫面",
+  "stock_menu_user_confirmed": true,
+  "native_sdl_rgb_user_confirmed": true,
+  "flashed_firmware": false,
+  "input_to_sdl_scanout_ms": [
+    197.7,
+    215.0,
+    208.5,
+    196.8,
+    236.1
+  ],
+  "target_max_ms": 250,
+  "input_measurement_scope": "evdev -> active SDL DMA-BUF pixel; not camera-measured optical latency",
+  "baseline_polling_ms": [
+    1060.3,
+    1003.1,
+    1029.7,
+    987.9,
+    1045.0
+  ],
+  "slow_screencast_with_python_utf8_validation_ms": [
+    1227.7,
+    904.8,
+    883.6,
+    885.6,
+    895.3
+  ],
+  "button_mapping": {
+    "A_detail_code": 305,
+    "B_back_code": 304
+  },
+  "exit_seconds": 1.83,
+  "exit_restored": {
+    "stock_menu": true,
+    "brightness": 31,
+    "rootfs_mounts_remaining": 0,
+    "mount_lock_remaining": false,
+    "browser_remaining": false
+  },
+  "long_duration_idle_verified": false,
+  "reboot_verified": false,
+  "ci_deployed": false,
+  "final_input_to_sdl_scanout_ms": [
+    211.7,
+    216.0,
+    215.5,
+    219.7,
+    218.7
+  ],
+  "logical_button_event_test_passed": true,
+  "diagnostic_instrumentation_removed": true,
+  "final_exit_seconds": 1.85,
+  "native_sdl_scanout_after_relaunch": true,
+  "mqtt_after_relaunch": "Connected",
+  "online_hosts_after_relaunch": 3
+}

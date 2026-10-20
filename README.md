@@ -4,6 +4,10 @@
 
 把 R36 MAX 2 變成桌上的獨立監控螢幕，透過 MQTT 顯示 CPU、GPU、VRAM、記憶體、網路、磁碟與溫度。保留原本的遊戲選單，從 **Ports → Hardware Monitor** 就能進入監控。
 
+開發與驗收請看 [外部設備 CI 驗證手冊](docs/ci-validation.md)：說明模擬器的驗證範圍、自架 runner 配置、實機畫面與功能測試，以及失敗證據的保存。CI 建置流程目前為草案，尚未部署。
+
+原生 App、替代繪圖路徑及刷機需求的調查，見 [Smart Pro S 原生顯示研究](docs/native-app-display-research.md)。
+
 ## 實機畫面
 
 以下為 R36 MAX 2 上擷取的實際畫面，解析度為 1024 × 768。
@@ -58,7 +62,9 @@
 
 漫畫風的晶片角色、色塊儀表和使用量條，讓資訊容易辨識。監控開啟期間不會自動休眠，可用 FN 手動關閉顯示，並從啟動時隱藏滑鼠游標，全程使用掌機按鍵操作。
 
-## 按鍵操作
+## R36 MAX 2 按鍵操作
+
+TrimUI 的 A／B、背光與退出組合請看 [TrimUI 按鍵操作](docs/installation.md#trimui-按鍵操作)。
 
 兩支類比搖桿皆可使用，具有中心死區，長推會連續移動。斜推依偏移較大的方向移動。
 
@@ -86,6 +92,8 @@
 
 ## 安裝到掌機
 
+兩台設備使用不同安裝腳本，共用網頁與 MQTT 程式：R36 使用 [install.sh](browser/install.sh)，TrimUI 使用實驗性的 [install-trimui.sh](browser/install-trimui.sh)。SSH 預設登入、失敗後隱藏輸入帳密，以及 MQTT 互動設定，見 [雙設備安裝說明](docs/installation.md)。兩支腳本都會自動安裝相依套件；TrimUI 使用 headless Chromium＋原廠 SDL 顯示共用網頁，使用者已確認實體螢幕可見；驗收範圍與限制見安裝說明。實機依據見 [移植研究](docs/trimui-smart-pro-s-research.md)。以下流程適用於 R36 MAX 2。
+
 目前交付的是**顯示端原始碼與啟動腳本**，不包含整合完成的刷機映像。以下步驟用於已安裝 dArkOS4Clone、可透過 SSH 登入的 R36 MAX 2，帳號為 `ark`。系統安装請參考 [(d)ArkOS4Clone](https://github.com/lcdyk0517/arkos4clone) 的 R36Max2 文件。
 
 實機環境為 Debian 13 ARM64、Chromium、Xorg modesetting 與 Python 3。其他 R36 型號與原廠系統尚未驗證；遊戲選單路徑與按鍵代碼可能不同。
@@ -104,11 +112,11 @@ bash browser/install.sh
 
 腳本安裝 Chromium、Xorg 與 Python MQTT 依賴，將 Debian GBM 函式庫放在應用程式自己的 `lib` 目錄，保留遊戲系統的 Mali 函式庫。它啟用 `ark` 的 linger 和系統內建 ZRAM，安裝程式與圖示，再重新載入遊戲選單。常亮與隱藏游標由啟動腳本處理。已有相依套件時跳過套件安裝。
 
-每次安裝先建立私有 `/home/ark/hwmonitor-backup.*` 備份，輸出完整路徑。備份包含 MQTT 帳密，不要上傳。已存在的 MQTT 設定會保留；提供 `--config FILE` 才會替換。重複執行會更新檔案，保留其他 Ports 項目與遊玩紀錄。
+每次安裝先建立私有 `/home/ark/hwmonitor-backup.*` 備份，輸出完整路徑。備份包含 MQTT 帳密，不要上傳。腳本優先使用既有 MQTT 設定；提供 `--config FILE` 可指定另一份設定。驗證失敗時可互動修改帳密，成功後才儲存。重複執行會更新檔案，保留其他 Ports 項目與遊玩紀錄。
 
 ### MQTT 設定與更新
 
-首次安裝若未提供設定，腳本會提示 `MQTT setup pending`。由操作者依 broker 資訊填寫設定檔，不要把帳密寫進 Git 或 AI 的公開輸出。
+首次安裝未提供設定時，腳本會提示 broker 位址、TLS 與埠號，先嘗試環境變數提供的預設帳密，未設定則先試匿名。登入或訂閱遭拒後提示輸入帳號及隱藏密碼。也可以依以下步驟準備設定檔；不要把帳密寫進 Git 或 AI 的公開輸出。
 
 ```bash
 # 寫入掌機：準備本機設定。
@@ -190,11 +198,15 @@ sudo systemctl start emulationstation
 
 2026-10-07 已在 R36 MAX 2 上接收三台電腦的真實資料，驗證總覽、詳細頁、按鍵操作、常亮及退出後回到遊戲選單。程式測試涵蓋七台主機分頁；版面測試涵蓋零、兩、四張 GPU，以及 1024 × 768 下沒有捲動或裁切。
 
+TrimUI 的實體顯示、方向鍵延遲、按鍵映射與退出清理結果見 [雙設備安裝驗證](docs/installation.md#驗證與限制)。兩台掌機已共用同一份網頁；手機窄版仍待適配。
+
 GPU、VRAM 與溫度等資訊取決於採集端回報內容。缺少資料時以橫線標示，不以零值代替。更多主機的實機顯示，以及其他掌機型號，仍需各自驗證。
 
 在開發電腦執行基本測試，Python 測試不需要連接 MQTT broker：
 
 ```bash
+python3 browser/test_install.py
+python3 browser/test_trimui_browser.py
 python3 browser/test_monitor.py
 python3 browser/test_monitor_events.py
 python3 browser/test_menu.py

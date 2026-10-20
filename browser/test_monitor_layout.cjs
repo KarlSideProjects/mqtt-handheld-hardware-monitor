@@ -23,7 +23,8 @@ const server=http.createServer((req,res)=>{
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await chromium.launch({headless:true,args:['--disable-gpu']});
  try{
-  const page=await browser.newPage({viewport:{width:1024,height:768}});
+  const viewport=process.env.MONITOR_VIEWPORT?JSON.parse(process.env.MONITOR_VIEWPORT):{width:1024,height:768};
+  const page=await browser.newPage({viewport});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port);await page.locator('.distance-detail .reading').first().waitFor();
   await page.locator('#screen-button').click();await page.waitForFunction(()=>document.getElementById('screen-button').textContent==='FN Wake');assert.equal(state.screen_off,true);await page.locator('#screen-button').press('Enter');await page.waitForFunction(()=>document.getElementById('screen-button').textContent==='FN Screen off');assert.equal(state.screen_off,false);
@@ -50,6 +51,6 @@ const server=http.createServer((req,res)=>{
   assert.ok(await page.locator('h2').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=30));assert.ok(await page.locator('.metric small').first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=20));
   for(const count of [0,2,4]){for(const h of state.hosts)h.metrics.gpus=Array.from({length:count},(_,i)=>({...primaryGpu,usage_percent:100,name:'GPU '+i}));await page.reload();await page.locator('article').first().waitFor();await fits();assert.equal(await page.locator('.overview-gpu-row').count(),count*3)}
   if(actual){for(const item of actual.hosts){state.detail=item.host;state.hosts=[item];state.selected=item.host;await page.reload();await page.locator('.detail-grid').waitFor();await fits();for(const section of ['cpu','gpu','memory','network','disks','temperatures','history']){state.focus=section;await page.reload();await page.waitForFunction(()=>document.getElementById('main').innerHTML.length>0);await fits()}state.focus=null}}
-  assert.deepEqual(errors,[]);console.log('PASS: 1024×768, no scrolling or clipping, distance readings 64/48px, drill-down cores, 0/2/4 GPUs, three-host overview');
+  assert.deepEqual(errors,[]);console.log(`PASS: ${viewport.width}×${viewport.height}, no scrolling or clipping, distance readings 64/48px, drill-down cores, 0/2/4 GPUs, three-host overview`);
  }finally{await browser.close();server.closeAllConnections();server.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

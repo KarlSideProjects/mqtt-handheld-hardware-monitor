@@ -10,7 +10,7 @@ Cog 路徑的黑屏是必須攔截的失敗案例。[實測紀錄](evidence/trim
 
 此紀錄中的 framebuffer 擁有者欄位來自該台韌體的 debugfs。它是該 Cog 測試的必要診斷條件，不能直接當成所有 DRM 裝置的通用測試，也不能證明實體 LCD 可見。
 
-2026-10-20 的 GitHub 唯讀查詢中，這個儲存庫沒有已登錄的 Actions workflow，儲存庫及所屬組織的 runner 清單均為空。查詢範圍是 `repos/KarlSideProjects/r36max2-hwmonitor/actions/{workflows,runners}` 及 `orgs/KarlSideProjects/actions/runners`，不包含帳號其他儲存庫。本文沒有建立 runner 或啟用工作流程。Chromium／SDL 實機測試由人工觸發執行，使用者已確認橋接頁面可見，結果見 [安裝驗證](installation.md#驗證與限制)，尚未串接 CI。
+2026-10-20 的 GitHub 唯讀查詢中，這個儲存庫沒有已登錄的 Actions workflow，儲存庫及所屬組織的 runner 清單均為空。查詢時倉庫舊稱 `r36max2-hwmonitor`；查詢範圍是 `repos/KarlSideProjects/r36max2-hwmonitor/actions/{workflows,runners}` 及 `orgs/KarlSideProjects/actions/runners`，不包含帳號其他儲存庫。本文沒有建立 runner 或啟用工作流程。Chromium／SDL 實機測試由人工觸發執行，使用者已確認橋接頁面可見，結果見 [安裝驗證](installation.md#驗證與限制)，尚未串接 CI。
 
 建議 CI 分別回報以下狀態，發布時要求對應機型全部通過：
 

@@ -1,21 +1,37 @@
 # MQTT Handheld Hardware Monitor
 
-A multi-device MQTT hardware monitoring dashboard for Linux handheld consoles. Monitor multiple PCs' CPU, GPU, VRAM, RAM, network, disks and temperatures with a shared web UI, a Python backend, physical controls and manual screen power saving. Device integrations use Chromium, with a native SDL2 display bridge on TrimUI Smart Pro S.
+Turn supported Linux handhelds into MQTT hardware monitoring dashboards for multiple PCs. Display CPU, GPU, memory, network, disk and temperature data, and navigate with the handheld's buttons.
 
-**將 Linux 掌機變成獨立硬體監控螢幕，隨時查看多台電腦的狀態。**
+**把掌機變成桌上的電腦硬體監控螢幕，一台掌機就能查看多台電腦。**
 
-本專案以共用網頁與 MQTT 資料服務支援不同設備，保留各設備原本的遊戲選單，並分別提供安裝、按鍵及顯示適配。
+## 主要功能
 
-| 設備 | 系統與顯示方式 | 啟動入口與支援狀態 |
-| --- | --- | --- |
-| R36 MAX 2 | dArkOS4Clone／Debian、Chromium／Xorg | Ports → Hardware Monitor；已實機驗證 |
-| TrimUI Smart Pro S | 原廠 Buildroot、headless Chromium／原生 SDL2 | Apps → Hardware Monitor；實驗支援，已確認實體畫面可見 |
+- **查看電腦狀態：** 顯示 CPU、GPU、顯示記憶體、記憶體、網路、磁碟與溫度。
+- **監控多台電腦：** 總覽每頁顯示三台，可自動輪播，或選取一台查看詳細數據與趨勢圖。
+- **使用掌機按鍵操作：** 選取電腦、切換資訊頁、返回或退出，保留原本的遊戲選單。
+- **單鍵關屏與喚醒：** R36 使用 FN，TrimUI 使用 X；關屏時 MQTT 繼續接收資料。
+- **查看掌機自身狀態：** 顯示本機 CPU、記憶體、溫度與電池資訊；無法取得的資料以橫線表示。
 
-安裝與驗收範圍見 [雙設備安裝說明](docs/installation.md)。其他 Linux 設備仍需適配顯示、輸入、背光與安裝流程；本專案尚未驗證所有掌機或一般 Linux 電腦作為顯示端。
+## 目前支援的硬體
 
-開發與驗收請看 [外部設備 CI 驗證手冊](docs/ci-validation.md)：說明模擬器的驗證範圍、自架 runner 配置、實機畫面與功能測試，以及失敗證據的保存。CI 建置流程目前為草案，尚未部署。
+以下是作為監控螢幕的掌機清單；被監控的電腦需另外執行資料採集程式。
 
-原生 App、替代繪圖路徑及刷機需求的調查，見 [Smart Pro S 原生顯示研究](docs/native-app-display-research.md)。
+| 硬體 | 所需系統 | 支援狀態 | 安裝腳本 |
+| --- | --- | --- | --- |
+| R36 MAX 2 | dArkOS4Clone／Debian 13 ARM64 | 已實機驗證 | [install.sh](browser/install.sh) |
+| TrimUI Smart Pro S | 原廠 Buildroot ARM64 | 實驗支援；畫面、按鍵事件及關屏／喚醒已實測，長時間穩定性待驗收 | [install-trimui.sh](browser/install-trimui.sh) |
+
+兩台設備顯示同一套監控網頁，安裝方式與按鍵適配各自處理。其他掌機及一般 Linux 設備尚未驗證。
+
+## 使用前需要
+
+1. 一台上表支援的掌機，連接網路與電源。
+2. 被監控的 Windows 或 Linux 電腦，安裝 [hwmonitor-mqtt 資料採集程式](https://github.com/jhihweijhan/hwmonitor-mqtt#快速開始)。
+3. 可連線的 MQTT broker，負責將電腦資料傳給掌機。
+
+資料流程：**電腦採集程式 → MQTT broker → 掌機監控畫面**。本倉庫提供掌機顯示端與安裝腳本；電腦採集端及 broker 需另行準備。
+
+安裝與帳密設定請看 [雙設備安裝說明](docs/installation.md)。開發者可參考 [CI 驗證手冊](docs/ci-validation.md)及 [TrimUI 顯示適配研究](docs/native-app-display-research.md)；CI 工作流程尚未部署。
 
 ## 實機畫面
 

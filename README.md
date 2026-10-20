@@ -168,24 +168,23 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 
 先依 [hwmonitor-mqtt 的安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#快速開始) 設定 Linux 或 Windows 採集端與 broker。掌機上的 Python 程式接收 MQTT，再把資料送給本機瀏覽器；broker 不需要支援 WebSocket。
 
-Linux 或 PVE 採集端可從 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 取得 `install.sh`。在主機上執行以下準備命令，先在 `.env` 設定 MQTT 連線資訊：
+### 在被監看機自動下載安裝
+
+以下命令在被監看的電腦執行。安裝入口會下載採集端、引導設定 MQTT，並呼叫對應平台的安裝模組；不需要先 clone 專案。再次執行會保留既有設定。
+
+Linux／PVE：使用 root 終端執行；一般 Linux 可先執行 `sudo -i`。
 
 ```bash
-git clone https://github.com/KarlSideProjects/hwmonitor-mqtt.git
-cd hwmonitor-mqtt
-test -e .env || cp .env.example .env
-chmod 600 .env
-nano .env
+(tmp=$(mktemp) && curl -fsSL https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.sh -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status")
 ```
 
-一般 Linux 使用 Docker Compose；先預覽再安裝：
+Windows：使用「系統管理員」PowerShell 執行。
 
-```bash
-bash install.sh --dry-run
-sudo bash install.sh
+```powershell
+$ErrorActionPreference='Stop'; $p=Join-Path $env:TEMP ('hwmonitor-mqtt-'+[guid]::NewGuid().ToString('N')+'.ps1'); try { Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.ps1' -OutFile $p; & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $p; if ($LASTEXITCODE -ne 0) { throw "安裝失敗，退出碼 $LASTEXITCODE" } } finally { Remove-Item $p -Force -ErrorAction SilentlyContinue }
 ```
 
-PVE 預設使用原生 systemd，也可選擇 Docker。PVE 必須先準備好 `/etc/hwmonitor-mqtt/pve.env` 與可信 CA，再以 root 執行 dry-run 和安裝命令；若已用 `root` 登入，可省略命令中的 `sudo`。設定檔及 CA 的建立方式、權限與 API 權限需求，請看[採集端 PVE 安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
+PVE 需提供唯讀 API token 與可信 CA；缺少設定時，入口會建立私有設定範本並停止，完成設定後重跑同一命令。平台依賴、設定位置與驗證限制請看[採集端安裝說明](https://github.com/KarlSideProjects/hwmonitor-mqtt#在-linux-或-pve-安裝-sender)。
 
 ## 安裝到掌機
 

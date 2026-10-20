@@ -175,7 +175,7 @@ TrimUI 使用 X 切換顯示省電與喚醒；A／B 與退出組合請看 [TrimU
 Linux／PVE：使用 root 終端執行；一般 Linux 可先執行 `sudo -i`。
 
 ```bash
-(tmp=$(mktemp) && curl -fsSL https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.sh -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status")
+(tmp=$(mktemp) && (command -v curl >/dev/null || (apt-get update && apt-get install -y curl)) && curl -fsSL https://raw.githubusercontent.com/KarlSideProjects/hwmonitor-mqtt/master/bootstrap.sh -o "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status")
 ```
 
 Windows：使用「系統管理員」PowerShell 執行。

@@ -1,5 +1,31 @@
 # R36 與 TrimUI 安裝說明
 
+## 快速安裝
+
+準備支援的掌機、可用的 MQTT broker，以及已安裝 [hwmonitor-mqtt](https://github.com/KarlSideProjects/hwmonitor-mqtt) 的 Windows／Linux 電腦。資料流程是「電腦採集端 → MQTT broker → 掌機」。本專案提供掌機顯示端，不包含刷機映像。
+
+1. 讓掌機連上網路、啟用 SSH，並退出遊戲或監控，回到原本選單。
+2. 在有 Git、Bash、SSH 的電腦終端下載本專案：
+
+   ```bash
+   git clone https://github.com/KarlSideProjects/mqtt-handheld-hardware-monitor.git
+   cd mqtt-handheld-hardware-monitor
+   ```
+
+3. 執行對應型號的安裝命令，將 `<掌機IP>` 換成自己的位址，兩條擇一：
+
+   ```bash
+   # R36 MAX 2
+   bash browser/install.sh --ssh <掌機IP>
+   # TrimUI Smart Pro S
+   bash browser/install-trimui.sh --ssh <掌機IP>
+   ```
+
+4. 依終端提示完成 SSH 登入及 MQTT 設定。腳本會安裝相依套件、備份既有檔案並保留既有 MQTT 設定；保存輸出的備份路徑，帳密與備份保持私有。
+5. 從 R36 的 **Ports → Hardware Monitor**，或 TrimUI 的 **應用 Apps → Hardware Monitor** 開啟，確認電腦資料持續更新。**A** 進入、**B** 返回；R36 用 **FN** 關屏、**Select + B** 退出，TrimUI 用 **X** 關屏、**Select + Start** 退出。
+
+帳密、空間需求及安裝檢查見 [完整安裝說明](#從電腦選擇安裝腳本)；還原與疑難排解見 [維護細節](user-guide.md#安裝到掌機)。全新系統安裝及還原的實機驗證範圍，請先閱讀該文件。
+
 兩台設備共用網頁與 MQTT 程式，但使用各自的安裝腳本。R36 是 Debian／Xorg；TrimUI 是 Buildroot，透過私有 Debian rootfs 執行 headless Chromium，再由原廠 SDL 顯示，不能直接共用套件安裝命令。平台依據見 [TrimUI 研究](trimui-smart-pro-s-research.md)。
 
 兩支腳本都會自動安裝相依套件。R36 使用系統 apt；TrimUI 下載固定 SHA-256 的官方 Debian ARM64 基礎映像，在內部儲存建立私有 rootfs，再由其中的 apt 安裝 Chromium、sandbox、完整套件相依、字型、CA 憑證與 Python pip，並安裝固定版本及雜湊的 paho-mqtt 與 websocket-client。SSH／MQTT 互動流程已通過模擬測試。TrimUI 採用 headless Chromium＋原廠 SDL 的橋接，使用者已確認實體 LCD 可見，兩台掌機尺寸的版面測試通過；長時間待機仍待驗收。自動化驗證方式見 [外部設備 CI 驗證手冊](ci-validation.md)。
@@ -7,16 +33,6 @@
 命令標示「唯讀」時只檢查設備；SSH 包裝仍會建立並清理暫存上傳目錄。「寫入」會安裝應用程式與選單。安裝前先退出監控與遊戲，回到掌機主選單。
 
 ## 從電腦選擇安裝腳本
-
-在已有本專案的電腦終端機執行。R36 的完整流程與還原方式見 [使用指南](user-guide.md#安裝到掌機)。
-
-```bash
-# 寫入 R36：先嘗試預設 SSH 登入；必要時提示帳密及 sudo。
-bash browser/install.sh --ssh 192.168.5.127
-
-# 寫入 TrimUI：自動安裝相依套件，再進行 MQTT 設定與 Apps 安裝。
-bash browser/install-trimui.sh --ssh 192.168.5.160
-```
 
 SSH 使用者預設為 R36 的 `ark` 與 TrimUI 的 `root`。共用的 [install-remote.sh](../browser/install-remote.sh) 先嘗試金鑰／設備允許的登入方式及對應原廠預設密碼；被拒絕後，終端機會提示使用者名稱和隱藏密碼。可用 `--user USER` 指定帳號，或透過 `HWMONITOR_SSH_PASSWORD` 環境變數提供密碼。密碼不放在命令列參數，也不印出；環境變數請由私有執行環境或隱藏輸入提供，避免把密碼寫進 shell 歷史。
 
@@ -164,3 +180,23 @@ python3 test_trimui_exit.py --expected-brightness 31
 X 鍵三輪關屏／喚醒測試通過，第一輪關屏保持 12 秒，超過主機資料的 10 秒過期門檻，MQTT 與三台主機持續在線。關屏時 DPMS Off、CRTC active=0、背光為零；喚醒恢復 On／active=1。從關屏狀態直接退出耗時 2.36 秒，恢復原廠選單、背光 31 並釋放瀏覽器、掛載與鎖。加入關屏協調後，方向鍵數位顯示延遲回歸測試五次約為 203 至 237 毫秒。完整數值見 [關屏驗證紀錄](evidence/trimui-screen-power-2026-10-20.json)。此三輪測試使用事件注入；使用者已確認此功能對應機身 X 鍵，完整實體按鍵操作矩陣仍待驗收。
 
 長時間穩定性、耗電、重新開機後防休眠及全部實體按鍵操作，仍需驗證。
+
+## 給 AI 的安裝 prompt
+
+把下面貼給能讀取 GitHub、執行終端與 SSH 的 AI 助理，填入型號與 IP。密碼請在本機終端輸入。
+
+```text
+請幫我安裝 https://github.com/KarlSideProjects/mqtt-handheld-hardware-monitor。
+我的掌機型號是［填入型號］，IP 是［填入 IP］。
+先讀 README、docs/installation.md 與 docs/device-controls.md，確認設備
+和作業系統符合支援清單，再檢查現有安裝並保留設定與備份。
+R36 MAX 2 使用 browser/install.sh；TrimUI Smart Pro S 使用
+browser/install-trimui.sh。依文件使用 --ssh 連線安裝，讓對應腳本安裝相依套件。
+SSH 先嘗試文件列出的預設登入方式，失敗時讓我在本機終端輸入帳密；
+MQTT 優先沿用私有設定，缺少 broker 資訊或驗證失敗時提示我補充並重試。
+不要把帳密寫進 Git 或公開輸出。若 AI 終端無法互動，提供需要我執行的命令。
+若電腦採集端尚未準備，先依 KarlSideProjects/hwmonitor-mqtt 的文件協助安裝。
+完成後確認 MQTT 連線及主機資料持續更新，告訴我如何從掌機選單開啟。
+請引導我實際確認畫面、方向鍵、A/B、關屏與喚醒以及退出回選單，
+分開回報自動檢查通過與尚需人工確認的項目。不要自行刷機。
+```

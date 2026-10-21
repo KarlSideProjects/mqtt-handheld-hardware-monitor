@@ -2,7 +2,7 @@
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Hardware Monitor</title>
 <style>
-:root{--ink:#243449;--paper:#fffef4;--mint:#8ae1c8;--pink:#ff9fbb;--yellow:#ffe071;--blue:#9cccf4}*{box-sizing:border-box}body{height:100vh;margin:0;padding:16px 20px;overflow:hidden;background:#ddf4ee;background-image:radial-gradient(#aecfc4 1px,transparent 1px);background-size:14px 14px;color:var(--ink);font:17px 'DejaVu Sans',sans-serif}header{height:62px;display:flex;align-items:center;gap:12px}header img{width:58px;height:58px}h1{font-size:30px;letter-spacing:-1px;margin:0;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:650px}.brand-note{font-size:13px;font-weight:bold;letter-spacing:.3px}#connection{margin-left:auto;background:var(--mint);border:2px solid var(--ink);border-radius:20px;padding:7px 12px;font-size:14px;font-weight:bold;white-space:nowrap}#connection.error{background:var(--yellow)}#summary{height:34px;display:flex;align-items:center;font-size:15px;font-weight:bold}main{height:calc(100vh - 168px);min-height:0;overflow:hidden}footer{height:38px;padding-top:12px;display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:14px;font-weight:bold}button{font:inherit;font-weight:bold;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);padding:4px 8px;cursor:pointer}button:focus-visible{outline:3px solid #9860bd;outline-offset:2px}kbd{font:inherit;background:var(--ink);color:var(--paper);border-radius:5px;padding:2px 5px}.panel,article{border:3px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);border-radius:18px;min-width:0;min-height:0;padding:12px 14px}.panel h3{font-size:18px;line-height:24px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}.tag{font-size:12px;background:var(--yellow);padding:1px 6px;border:1px solid var(--ink);border-radius:6px}.detail-grid{height:100%;display:grid;grid-template-columns:1.02fr 1.18fr .9fr;grid-template-rows:1.42fr 1fr .82fr;gap:12px;padding:0 5px 5px 0}.cpu-panel{background:#e6f5ff}.gpu-panel{background:#ffedf3}.memory-panel{background:#e9f8ef}.wide{grid-column:1/-1}.instrument{display:flex;align-items:center;gap:12px}.gauge{width:94px;height:94px;flex-shrink:0}.gauge text{fill:var(--ink);font-size:22px;font-weight:bold}.instrument>div{min-width:0;flex:1}.sensor{font-size:13px;line-height:20px}.track{height:10px;border:1.5px solid var(--ink);background:#e1e8e8;border-radius:5px;overflow:hidden;margin-top:4px}.fill{height:100%;background:var(--color)}.cores{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.core{font-size:12px;font-weight:bold}.core .track{height:8px}.core-heading{font-size:12px;font-weight:bold;margin-top:8px}.gpu-card+.gpu-card{margin-top:8px;border-top:1px solid #cda8b7;padding-top:7px}.gpu-name{font-size:13px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gpu-card .gauge{width:63px;height:63px}.gpu-card .instrument{gap:8px}.gpu-card .sensor{font-size:12px;line-height:18px}.gpu-card .track{height:8px;margin-top:2px}.multi-gpu{display:grid;grid-template-columns:1fr 1fr;gap:6px}.multi-gpu .gpu-card{margin:0;border:0;padding:0}.multi-gpu .gauge{width:45px;height:45px}.big{font-size:25px;font-weight:bold;margin:6px 0}.memory-panel .gauge{width:92px;height:92px}.mini-label{font-size:12px;color:#4e6275}.memory-info{font-size:14px;font-weight:bold;margin:5px 0 12px}.io-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px}.io-totals strong{display:block;font-size:17px;margin:3px 0 8px}.io-totals small{font-size:12px}.compact-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:12px;line-height:23px;border-top:1px solid #d6dddd}.compact-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.more{font-size:11px;color:#526476;margin-top:3px}.temp-list{display:grid;gap:7px}.temp-line{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:8px;font-size:12px;font-weight:bold}.temp-line span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.temp-line .track{grid-column:1/-1;height:6px;margin:0}.histories{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}.history small{display:block;font-size:12px;font-weight:bold}.history strong{display:block;font-size:14px;margin-top:4px}.history svg{display:block;width:100%;height:50px;margin-top:5px;background:#edf2ef;border-bottom:1px solid #becbc6}.history-note{font-size:11px;font-weight:normal}.overview-grid{height:100%;display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:13px;padding:0 6px 6px 0}article{position:relative;display:grid;grid-template-columns:185px 1fr;align-items:center;gap:15px}article:nth-child(2){background:#e6f5ff}article:nth-child(3){background:#ffedf3}article.selected{background:#fff1b7;box-shadow:5px 5px 0 var(--ink);border-color:#243449}article.selected:before{content:'▶';position:absolute;left:-15px;top:50%;transform:translateY(-50%);font-size:23px;color:var(--ink)}.host-title{display:flex;align-items:center;gap:10px}.host-title img{width:52px;height:52px}h2{font-size:22px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.host-caption{font-size:12px;line-height:22px;font-weight:bold}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.metric small{font-size:13px;display:block;font-weight:bold}.metric strong{font-size:26px;display:block;margin:5px 0}.metric svg{width:100%;height:26px;display:block}.metric .vram{font-size:11px;font-weight:normal;white-space:nowrap}.temperature-pair strong{font-size:18px;margin:8px 0}.empty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;font-weight:bold}.empty img{width:120px;display:block;margin:auto auto 15px}.gpu-panel h3 .tag{background:var(--pink)}.memory-panel h3 .tag{background:var(--mint)}.gpu-panel.compact .gpu-card .gauge{width:45px;height:45px}.gpu-panel.compact .gpu-card .sensor{font-size:10px}
+:root{--ink:#243449;--paper:#fffef4;--mint:#8ae1c8;--pink:#ff9fbb;--yellow:#ffe071;--blue:#9cccf4}*{box-sizing:border-box}html{overflow:hidden}body{height:var(--view-height,100vh);margin:0;padding:16px 20px;overflow:hidden;background:#ddf4ee;background-image:radial-gradient(#aecfc4 1px,transparent 1px);background-size:14px 14px;color:var(--ink);font:17px 'DejaVu Sans',sans-serif}header{height:62px;display:flex;align-items:center;gap:12px}header img{width:58px;height:58px}h1{font-size:30px;letter-spacing:-1px;margin:0;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:650px}.brand-note{font-size:13px;font-weight:bold;letter-spacing:.3px}#connection{margin-left:auto;background:var(--mint);border:2px solid var(--ink);border-radius:20px;padding:7px 12px;font-size:14px;font-weight:bold;white-space:nowrap}#connection.error{background:var(--yellow)}#summary{height:34px;display:flex;align-items:center;font-size:15px;font-weight:bold}main{height:calc(var(--view-height,100vh) - 168px);min-height:0;overflow:hidden}footer{height:38px;padding-top:12px;display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:14px;font-weight:bold}button{font:inherit;font-weight:bold;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);padding:4px 8px;cursor:pointer}button:focus-visible{outline:3px solid #9860bd;outline-offset:2px}kbd{font:inherit;background:var(--ink);color:var(--paper);border-radius:5px;padding:2px 5px}.panel,article{border:3px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--ink);border-radius:18px;min-width:0;min-height:0;padding:12px 14px}.panel h3{font-size:18px;line-height:24px;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}.tag{font-size:12px;background:var(--yellow);padding:1px 6px;border:1px solid var(--ink);border-radius:6px}.detail-grid{height:100%;display:grid;grid-template-columns:1.02fr 1.18fr .9fr;grid-template-rows:1.42fr 1fr .82fr;gap:12px;padding:0 5px 5px 0}.cpu-panel{background:#e6f5ff}.gpu-panel{background:#ffedf3}.memory-panel{background:#e9f8ef}.wide{grid-column:1/-1}.instrument{display:flex;align-items:center;gap:12px}.gauge{width:94px;height:94px;flex-shrink:0}.gauge text{fill:var(--ink);font-size:22px;font-weight:bold}.instrument>div{min-width:0;flex:1}.sensor{font-size:13px;line-height:20px}.track{height:10px;border:1.5px solid var(--ink);background:#e1e8e8;border-radius:5px;overflow:hidden;margin-top:4px}.fill{height:100%;background:var(--color)}.cores{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.core{font-size:12px;font-weight:bold}.core .track{height:8px}.core-heading{font-size:12px;font-weight:bold;margin-top:8px}.gpu-card+.gpu-card{margin-top:8px;border-top:1px solid #cda8b7;padding-top:7px}.gpu-name{font-size:13px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gpu-card .gauge{width:63px;height:63px}.gpu-card .instrument{gap:8px}.gpu-card .sensor{font-size:12px;line-height:18px}.gpu-card .track{height:8px;margin-top:2px}.multi-gpu{display:grid;grid-template-columns:1fr 1fr;gap:6px}.multi-gpu .gpu-card{margin:0;border:0;padding:0}.multi-gpu .gauge{width:45px;height:45px}.big{font-size:25px;font-weight:bold;margin:6px 0}.memory-panel .gauge{width:92px;height:92px}.mini-label{font-size:12px;color:#4e6275}.memory-info{font-size:14px;font-weight:bold;margin:5px 0 12px}.io-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px}.io-totals strong{display:block;font-size:17px;margin:3px 0 8px}.io-totals small{font-size:12px}.compact-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:12px;line-height:23px;border-top:1px solid #d6dddd}.compact-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.more{font-size:11px;color:#526476;margin-top:3px}.temp-list{display:grid;gap:7px}.temp-line{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:8px;font-size:12px;font-weight:bold}.temp-line span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.temp-line .track{grid-column:1/-1;height:6px;margin:0}.histories{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}.history small{display:block;font-size:12px;font-weight:bold}.history strong{display:block;font-size:14px;margin-top:4px}.history svg{display:block;width:100%;height:50px;margin-top:5px;background:#edf2ef;border-bottom:1px solid #becbc6}.history-note{font-size:11px;font-weight:normal}.overview-grid{height:100%;display:grid;grid-template-rows:repeat(3,minmax(0,1fr));gap:13px;padding:0 6px 6px 0}article{position:relative;display:grid;grid-template-columns:185px 1fr;align-items:center;gap:15px}article:nth-child(2){background:#e6f5ff}article:nth-child(3){background:#ffedf3}article.selected{background:#fff1b7;box-shadow:5px 5px 0 var(--ink);border-color:#243449}article.selected:before{content:'▶';position:absolute;left:-15px;top:50%;transform:translateY(-50%);font-size:23px;color:var(--ink)}.host-title{display:flex;align-items:center;gap:10px}.host-title img{width:52px;height:52px}h2{font-size:22px;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.host-caption{font-size:12px;line-height:22px;font-weight:bold}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.metric small{font-size:13px;display:block;font-weight:bold}.metric strong{font-size:26px;display:block;margin:5px 0}.metric svg{width:100%;height:26px;display:block}.metric .vram{font-size:11px;font-weight:normal;white-space:nowrap}.temperature-pair strong{font-size:18px;margin:8px 0}.empty{height:100%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:21px;font-weight:bold}.empty img{width:120px;display:block;margin:auto auto 15px}.gpu-panel h3 .tag{background:var(--pink)}.memory-panel h3 .tag{background:var(--mint)}.gpu-panel.compact .gpu-card .gauge{width:45px;height:45px}.gpu-panel.compact .gpu-card .sensor{font-size:10px}
 .detail-grid>[data-section]{cursor:pointer}.detail-grid>.panel.selected{outline:4px solid #cb8e16;outline-offset:-7px}.detail-grid>[data-section]:focus-visible{outline:4px solid #9860bd;outline-offset:-7px}.focus-grid{height:100%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;padding:0 5px 5px 0}.focus-grid .panel{padding:18px}.focus-grid h3{font-size:23px;line-height:30px}.focus-grid .gauge{width:148px;height:148px}.focus-grid .sensor{font-size:18px;line-height:27px}.focus-grid .core{font-size:19px}.focus-grid .cores{gap:18px}.focus-grid .core .track{height:16px}.focus-grid .big{font-size:32px}.focus-grid .focus-chart svg{height:145px;width:100%;background:#f0f6f2;margin-top:14px;border-bottom:2px solid #a6b8ae}.focus-grid .mini-label{font-size:16px}.focus-full{grid-column:1/-1}.focus-gpus{height:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:14px;padding:0 5px 5px 0}.focus-gpus .panel{padding:18px}.focus-gpus .gpu-card{margin:0;border:0;padding:0}.focus-gpus .gpu-name{font-size:20px;margin-bottom:10px}.focus-gpus .gauge{width:105px;height:105px}.focus-gpus .sensor{font-size:16px;line-height:26px}.focus-gpus .gpu-card .track{height:13px}.focus-gpus .focus-chart svg{width:100%;height:145px;margin-top:10px;background:#fff8fb}.focus-list{height:100%;display:grid;grid-template-rows:auto auto 1fr;gap:12px;padding:0 5px 5px 0}.focus-list>.panel:first-child h3{font-size:25px}.focus-list .io-totals strong{font-size:25px}.focus-list .io-totals small{font-size:17px}.focus-list .graphs-pair{display:grid;grid-template-columns:1fr 1fr;gap:18px}.focus-list .graphs-pair svg{width:100%;height:65px;margin-top:8px;background:#eef5f0}.item-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:10px;min-height:0}.item-card{border:2px solid var(--ink);background:var(--paper);border-radius:12px;padding:8px 10px;min-width:0;min-height:0}.item-card h4{font-size:14px;margin:0 0 5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item-card .sensor{font-size:12px;line-height:19px}.item-card .track{height:7px;margin-top:2px}.focus-activity{height:100%;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(0,1fr);gap:14px;padding:0 5px 5px 0}.focus-activity svg{width:100%;height:130px;margin-top:16px;background:#eff5f0}.focus-activity strong{font-size:24px;display:block}.focus-activity h3{font-size:18px}
 .focus-gpus.single{grid-template-columns:1fr}.focus-gpus.compact .gauge{width:76px;height:76px}.focus-gpus.compact .gpu-name{font-size:16px;margin-bottom:5px}.focus-gpus.compact .sensor{font-size:13px;line-height:20px}.focus-gpus.compact .focus-chart svg{height:38px;margin-top:4px}.focus-gpus.compact .focus-chart small{font-size:12px}
 @media(prefers-reduced-motion:no-preference){article.selected:before{animation:pop .12s ease-out}@keyframes pop{from{transform:translate(-5px,-50%)}to{transform:translate(0,-50%)}}}
@@ -29,13 +29,11 @@
 body.device-summary h1{font-size:36px}
 body.device-summary #summary{font-size:19px}
 
-@media (min-width:900px) and (max-height:740px){
- .distance-detail>.usage-panel{padding:10px 16px}
- .distance-detail .panel h3{font-size:26px;line-height:30px;margin-bottom:4px}
- .distance-detail .reading{line-height:1.05;margin:4px 0 6px}
- .distance-detail .track{height:14px;margin-bottom:6px}
- .distance-detail .reading-note,.distance-detail .reading-meta{font-size:20px;line-height:24px}
-}
+body.short .distance-detail>.usage-panel{padding:10px 16px}
+body.short .distance-detail .panel h3{font-size:26px;line-height:30px;margin-bottom:4px}
+body.short .distance-detail .reading{line-height:1.05;margin:4px 0 6px}
+body.short .distance-detail .track{height:14px;margin-bottom:6px}
+body.short .distance-detail .reading-note,body.short .distance-detail .reading-meta{font-size:20px;line-height:24px}
 
 .distance-detail .gpu-readings{height:calc(100% - 44px);display:grid;grid-template-rows:repeat(var(--gpu-count),minmax(0,1fr));gap:8px}
 .distance-detail .gpu-reading{min-height:0;display:flex;flex-direction:column;justify-content:center}
@@ -98,9 +96,7 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .focus-gpus .sensor{font-size:24px;line-height:32px}
 .focus-gpus .focus-chart small{font-size:21px;line-height:28px}
 .focus-gpus .focus-chart svg{height:115px;margin-top:8px}
-@media (min-width:900px) and (max-height:740px){
- .focus-gpus .focus-chart svg{height:95px}
-}
+body.short .focus-gpus .focus-chart svg{height:95px}
 .focus-list{grid-template-rows:170px 100px minmax(0,1fr)}
 .focus-list>.panel{padding:10px 14px}
 .focus-list .io-totals strong{font-size:38px;line-height:44px;margin:2px 0 4px}
@@ -117,12 +113,6 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .focus-activity strong{font-size:32px;line-height:38px}
 .focus-activity small{font-size:18px;line-height:24px}
 .focus-activity svg{height:115px;margin-top:12px}
-@media (min-width:900px) and (max-height:740px){
- .item-card{padding:4px 10px}
- .item-card h4{font-size:20px;line-height:24px;margin-bottom:3px}
- .item-card .sensor{font-size:20px;line-height:24px}
- .item-card .item-extra{font-size:16px;line-height:18px}
-}
 .pve-list{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:18px 20px}.pve-list h2{font-size:28px;display:flex;justify-content:space-between;align-items:center}.pve-list h2 .tag{font-size:18px}.pve-rows{display:grid;grid-auto-rows:minmax(0,1fr);gap:9px;min-height:0}.pve-row{display:grid;grid-template-columns:100px minmax(120px,1fr) 130px 150px;grid-template-rows:minmax(0,1fr) auto;align-items:center;gap:4px 12px;padding:8px 12px;border:2px solid var(--ink);border-radius:12px;background:#e6f5ff;font-size:18px;min-width:0}.pve-row.selected{background:#fff1b7;outline:3px solid #cb8e16}.pve-row>*{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pve-row .pve-memory{grid-column:1/-1;overflow:visible;text-overflow:clip}.distance-detail.pve-enabled>.detail-shortcut,.distance-detail.pve-enabled>.pve-entry{grid-column:span 2}.distance-detail .pve-entry{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}.distance-detail .pve-entry.selected{outline:4px solid #cb8e16;outline-offset:-7px}.distance-detail.pve-enabled>.detail-shortcut,.distance-detail.pve-enabled>.pve-entry{padding:6px 9px}.distance-detail.pve-enabled>.detail-shortcut h3,.distance-detail.pve-enabled>.pve-entry h3{font-size:16px;line-height:20px;margin:0}.distance-detail.pve-enabled>.detail-shortcut>span,.distance-detail.pve-enabled>.pve-entry>span{font-size:15px;line-height:18px}
 .pve-detail{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:10px;padding:14px 18px}.pve-detail h2{font-size:22px;display:flex;justify-content:space-between;gap:8px;min-width:0}.pve-detail h2 .pve-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pve-detail h2 .tag{flex:none;font-size:15px}.pve-readings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.pve-reading{min-width:0;padding:7px 9px;border:2px solid var(--ink);border-radius:9px;background:#e6f5ff}.pve-reading small,.pve-trend small{display:block;font-size:13px;font-weight:bold}.pve-reading strong{display:block;font-size:19px;margin-top:4px;white-space:nowrap}.pve-reading.pve-memory-reading{grid-column:1/-1}.pve-trends{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;min-height:0}.pve-trend{min-width:0;padding:6px 8px;border:1px solid #becbc6;border-radius:8px;background:#edf2ef}.pve-trend svg{width:100%;height:calc(100% - 20px);min-height:35px;display:block}
 /* Guest details keep distance-readable values above compact trends. */
@@ -158,6 +148,82 @@ header h1,body.device-summary h1{max-width:360px;font-size:30px}
 .distance-detail.resources-both>.detail-shortcut,.distance-detail.resources-both>.pve-entry{grid-column:span 3;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0}
 .pve-row>strong.docker-id{font-size:20px}
 .pve-reading.docker-identity strong{font-size:32px}
+body.short .item-card{padding:4px 10px}
+body.short .item-card h4{font-size:20px;line-height:24px;margin-bottom:3px}
+body.short .item-card .sensor{font-size:20px;line-height:24px}
+body.short .item-card .item-extra{font-size:16px;line-height:18px}
+
+body{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(var(--rotation,0deg))}
+body.narrow header{height:115px;align-items:flex-start}
+body.narrow #device-status{top:80px;left:20px;right:20px;width:auto;height:52px}
+body.narrow #device-status small{font-size:13px;line-height:16px}
+body.narrow #device-status strong{font-size:22px;line-height:25px}
+body.narrow #connection{top:25px;right:20px;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+body.narrow header>div{max-width:calc(100% - 280px)}
+body.narrow #summary{max-width:100%;font-size:15px}
+body.narrow main{height:calc(var(--view-height) - 249px)}
+body.narrow footer{height:66px;flex-wrap:wrap;gap:5px;font-size:12px;padding-top:8px}
+body.narrow footer>span{white-space:nowrap}
+body.narrow .overview-grid article{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:4px;padding:8px 12px}
+body.narrow .host-caption{font-size:14px;line-height:20px}
+body.narrow .host-title img{width:32px;height:32px}
+body.narrow .host-title h2{font-size:24px;line-height:28px}
+body.narrow .overview-grid .metric small{font-size:16px;line-height:20px}
+body.narrow .overview-grid .metric strong{font-size:26px;line-height:30px;margin:2px 0}
+body.narrow .overview-grid .metric .vram{font-size:14px;line-height:17px}
+body.narrow .overview-grid .temperature-pair strong{font-size:21px;line-height:25px}
+body.narrow .overview-gpu-row>span{font-size:14px}
+body.narrow .overview-grid .overview-gpu-row strong{font-size:19px;line-height:22px}
+body.narrow .overview-grid .metric svg{height:18px}
+body.narrow .detail-grid.distance-detail{gap:10px;grid-template-rows:1.1fr 1fr 76px}
+body.narrow .distance-detail>.usage-panel,body.narrow .distance-detail>.flow-panel{padding:10px}
+body.narrow .distance-detail .panel h3{font-size:21px;line-height:26px;margin-bottom:6px}
+body.narrow .distance-detail .tag{font-size:13px;line-height:18px}
+body.narrow .distance-detail .reading{font-size:44px;letter-spacing:-1px}
+body.narrow .distance-detail .reading-note,body.narrow .distance-detail .reading-meta{font-size:17px;line-height:23px}
+body.narrow .distance-detail .gpu-load>span{font-size:15px}
+body.narrow .distance-detail .gpu-load .reading{font-size:32px}
+body.narrow .distance-detail .gpu-readings[style="--gpu-count:1"] .reading{font-size:44px}
+body.narrow .distance-detail .gpu-vram{font-size:14px;line-height:20px}
+body.narrow .distance-detail .many-gpus .reading{font-size:25px}
+body.narrow .distance-detail .many-gpus .gpu-vram{font-size:12px}
+body.narrow .distance-detail .many-gpus .gpu-reading{flex-direction:column;align-items:stretch;gap:0}
+body.narrow .distance-detail .flow-row{grid-template-columns:65px minmax(0,1fr) 55px;gap:4px}
+body.narrow .distance-detail .flow-row>span:first-child{font-size:18px}
+body.narrow .distance-detail .flow-value{font-size:32px}
+body.narrow .distance-detail .flow-unit{font-size:16px}
+body.narrow .distance-detail .detail-shortcut{padding:8px;flex-wrap:wrap;gap:0}
+body.narrow .distance-detail .detail-shortcut h3{font-size:17px;line-height:22px}
+body.narrow .distance-detail .detail-shortcut>span{font-size:16px;line-height:22px}
+body.narrow .focus-grid .panel,body.narrow .focus-gpus .panel{padding:10px}
+body.narrow .focus-grid .gauge,body.narrow .focus-gpus .gauge{width:90px;height:90px}
+body.narrow .focus-grid .sensor,body.narrow .focus-gpus .sensor{font-size:18px;line-height:25px}
+body.narrow .focus-grid .big{font-size:28px;line-height:34px}
+body.narrow .focus-grid .mini-label{font-size:17px;line-height:23px}
+body.narrow .focus-grid .core{font-size:20px;line-height:26px}
+body.narrow .focus-grid .instrument,body.narrow .focus-gpus .instrument{gap:6px}
+body.narrow .focus-grid .focus-chart svg{height:100px}
+body.narrow .focus-gpus{grid-template-columns:1fr}
+body.narrow .focus-gpus .focus-chart svg{height:65px;margin-top:4px}
+body.narrow .focus-gpus .gpu-name{font-size:22px;line-height:26px;margin-bottom:4px}
+body.narrow .focus-gpus .focus-chart small{font-size:17px;line-height:22px}
+body.narrow .focus-activity{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.narrow .focus-activity .panel{padding:10px}
+body.narrow .focus-activity svg{height:55px;margin-top:6px}
+body.narrow .focus-activity strong{font-size:27px;line-height:33px}
+
+body.narrow .detail-grid.distance-detail.resources-both{grid-template-rows:1.1fr 1fr 76px 76px}
+body.narrow .distance-detail.resources-both>.detail-shortcut,body.narrow .distance-detail.resources-both>.pve-entry{grid-column:span 6}
+body.narrow .distance-detail .detail-shortcut h3{white-space:normal}
+body.narrow .distance-detail.pve-enabled>.detail-shortcut>span,body.narrow .distance-detail.pve-enabled>.pve-entry>span{font-size:14px;line-height:18px}
+body.narrow .pve-row{grid-template-columns:130px minmax(60px,1fr) 150px 150px;font-size:20px}
+body.narrow .pve-row>strong{font-size:22px}
+body.narrow .pve-row>:nth-child(4){font-size:24px}
+body.narrow .pve-row .pve-memory{font-size:20px}
+body.narrow .pve-state b,body.narrow .pve-state span{font-size:20px}
+body.narrow .pve-reading strong{font-size:24px}
+body.narrow .pve-reading:nth-child(-n+2) strong{font-size:48px}
+body.narrow .pve-reading.docker-identity strong{font-size:24px}
 </style>
 <header><img src="/assets/hardware-buddy.svg" alt="Smiling chip mascot"><div><div class="brand-note">Hardware buddies</div><h1 id="title">Hardware Monitor</h1></div><aside id="device-status" aria-label="R36 handheld status"><div><small>R36 Temp</small><strong id="local-temp">—</strong></div><div><small>R36 CPU</small><strong id="local-cpu">—</strong></div><div><small>R36 RAM</small><strong id="local-memory">—</strong></div><div id="local-battery-box"><small>Battery <span id="charge-icon"></span></small><strong id="local-battery">—</strong></div></aside><span id="connection">Connecting…</span></header>
 <div id="summary"></div><main id="main"></main>
@@ -231,7 +297,18 @@ function focusDetail(host,section,page=0){let m=host.metrics,h=host.history;
 }
 let updating=false;
 let viewKey='', renderedAt=0,lastSelection=null,lastPanel=null;
+let rotation=0;
+function orient(){
+ const sideways=rotation%180!==0,width=sideways?innerHeight:innerWidth,height=sideways?innerWidth:innerHeight;
+ const body=document.body;
+ body.style.width=width+'px';body.style.setProperty('--view-height',height+'px');
+ body.style.setProperty('--rotation',rotation+'deg');body.dataset.rotation=rotation;
+ body.classList.toggle('narrow',width<900);body.classList.toggle('short',width>=900&&height<=740);
+}
+window.addEventListener('resize',orient);
 function render(s){
+ rotation=s.rotation??0;orient();
+ document.querySelector('.brand-note').textContent='R-stick ← → Rotate · '+rotation+'°';
  const device=s.device??{},deviceName=device.name??'R36',screenKey=device.screen_key??'FN';
  document.getElementById('device-status').setAttribute('aria-label',deviceName+' handheld status');
  document.querySelectorAll('#device-status small').forEach((e,i)=>{if(i<3)e.textContent=deviceName+' '+['Temp','CPU','RAM'][i]});
@@ -251,7 +328,7 @@ function render(s){
  document.getElementById('connection').textContent=s.connection;
  document.getElementById('connection').className=s.connection==='Connected'?'':'error';
  document.getElementById('title').textContent=s.detail||'Hardware Monitor';
- document.getElementById('help').innerHTML=s.pve_view==='guest'?'L/R Guest · B List':s.pve_view?'<kbd>↑↓</kbd> Select · <kbd>←→</kbd> Page':s.detail?(s.focus?'<kbd>↑ ↓</kbd> Items <kbd>← →</kbd> Metric <kbd>B</kbd> Back':'<kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Open <kbd>B</kbd> Back'):'<kbd>Stick / D-pad</kbd> Select <kbd>A</kbd> Details';
+ document.getElementById('help').innerHTML=s.pve_view==='guest'?'L/R Guest · B List':s.pve_view?'<kbd>↑↓</kbd> Select · <kbd>←→</kbd> Page':s.detail?(s.focus?'<kbd>↑ ↓</kbd> Items <kbd>← →</kbd> Metric <kbd>B</kbd> Back':'<kbd>L / D-pad</kbd> Select <kbd>A</kbd> Open <kbd>B</kbd> Back'):'<kbd>L / D-pad</kbd> Select <kbd>A</kbd> Details';
  const resources=s.hosts[0]?.[s.resource_provider==='docker'?'docker':'virtualization'],resourceLabel=s.resource_provider==='docker'?'containers':'guests';
  document.getElementById('summary').textContent=s.pve_view?`${resources?.status==='error'?'API error · ':resources?.status==='unconfigured'?'Setup required · ':''}${resources?.fresh?'Fresh':'Data stale or not yet observed'} · ${resources?.guest_count??'Unknown'} ${resourceLabel}`: `${s.count} online · Page ${s.page} / ${s.pages} · ${s.focus?sectionLabels[s.focus]+' · L1 / R1 switch device':s.detail?'L1 / R1 switch device · A: metric details':s.paused?'Paused · press Start to resume':'Auto · 15 seconds per page'}`;
  let root=document.getElementById('main'),key=JSON.stringify([s.detail,s.focus,s.resource_provider,s.pve_view,s.pve_page,s.pve_selected,s.pve_guest_id,s.item_page??0,s.hosts.map(h=>h.host)]),now=performance.now();

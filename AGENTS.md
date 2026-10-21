@@ -2,6 +2,10 @@
 For structural codebase exploration, use the installed `codebase-memory` skill.
 <!-- codebase-memory-mcp:end -->
 
+## Sender
+
+MQTT 採集端（Windows/Linux/PVE sender）在 `KarlSideProjects/hwmonitor-mqtt`，本機 clone 位於 `~/Workspace/Tools/hwmonitor-mqtt`，有自己的 `AGENTS.md`。
+
 ## Web Research
 
 網頁研究優先使用全域 Firecrawl MCP 工具。

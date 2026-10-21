@@ -33,11 +33,15 @@ for direction in ('right', 'right', 'down', 'down', 'right'):
 assert state.snapshot()['panel'] == 'pve'
 state.action('detail', now)
 assert state.snapshot()['pve_view'] == 'guests'
+state.action('rotate_right', now)
+assert state.snapshot()['rotation'] == 90 and state.pve_view == 'guests'
 assert state.snapshot()['hosts'][0]['virtualization']['guest_count'] == 5
 state.action('down', now)
 assert state.snapshot()['pve_selected'] == 1
 state.action('detail', now)
 assert state.snapshot()['pve_view'] == 'guest'
+state.action('rotate_left', now)
+assert state.snapshot()['rotation'] == 0 and state.pve_view == 'guest'
 assert state.snapshot()['pve_guest_id'] == 'lab:lxc:101'
 state.action('next', now)
 assert state.snapshot()['pve_guest_id'] == 'lab:qemu:102'

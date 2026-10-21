@@ -189,6 +189,7 @@ class Monitor:
         self.bad_messages = 0
         self.device = LocalStatus()
         self.screen = None
+        self.rotation = 0
 
     def receive(self, topic, payload, retained=False, now=None):
         now = time.monotonic() if now is None else now
@@ -308,6 +309,11 @@ class Monitor:
                     self.changed.notify_all()
                 return
             if self.screen is not None and self.screen.asleep:
+                return
+            if action in ('rotate_left', 'rotate_right'):
+                self.rotation = (self.rotation + (90 if action == 'rotate_right' else -90)) % 360
+                self.version += 1
+                self.changed.notify_all()
                 return
             self.tick(now)
             order = list(self.hosts)
@@ -438,6 +444,7 @@ class Monitor:
             visible = [self.detail] if self.detail else order[page * 3:page * 3 + 3]
             return {'device': self.device.sample(), 'connection': self.connection, 'paused': self.paused, 'detail': self.detail,
                     'screen_off': bool(self.screen and self.screen.asleep),
+                    'rotation': self.rotation,
                     'focus': self.focus, 'pve_view': self.pve_view, 'resource_provider': self.resource_provider,
                     'pve_page': self.pve_index // 4, 'pve_selected': self.pve_index,
                     'pve_guest_id': self.pve_guest_id,
@@ -493,12 +500,13 @@ def mqtt_start(state):
 
 
 class StickNavigation:
-    """Dominant-axis navigation for both sticks, with a dead zone and hold repeat."""
+    """Left-stick navigation with repeat; right-stick rotation until recentered."""
     def __init__(self, limits):
         self.limits = limits
         self.values = {axis: 0.0 for axis in limits}
         self.direction = None
         self.next_repeat = 0.0
+        self.rotation_held = False
 
     def update(self, axis, value):
         if axis in self.limits:
@@ -507,7 +515,14 @@ class StickNavigation:
             self.values[axis] = (value - center) / max(1, (high - low) / 2)
 
     def poll(self, now):
-        axis = max(self.values, key=lambda a: abs(self.values[a]), default=None)
+        right, vertical = self.values.get(3, 0), self.values.get(4, 0)
+        if max(abs(right), abs(vertical)) < .25:
+            self.rotation_held = False
+        elif not self.rotation_held and abs(right) >= .45 and abs(right) >= abs(vertical):
+            self.rotation_held = True
+            return 'rotate_left' if right < 0 else 'rotate_right'
+        axis = max((a for a in self.values if a in (0, 1)),
+                   key=lambda a: abs(self.values[a]), default=None)
         value = self.values.get(axis, 0)
         threshold = .25 if self.direction else .45
         if abs(value) < threshold:
@@ -638,7 +653,7 @@ def handler(state):
                     raise ValueError('Invalid body size')
                 self.connection.settimeout(3)
                 action = json.loads(self.rfile.read(size)).get('action')
-                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS} | {'pve', 'docker'}:
+                if action not in set(BUTTONS.values()) | {'focus:' + key for key in SECTIONS} | {'pve', 'docker', 'rotate_left', 'rotate_right'}:
                     raise ValueError('Invalid action')
                 state.action(action)
                 self.respond(b'{}', 'application/json')

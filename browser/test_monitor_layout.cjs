@@ -114,6 +114,27 @@ const server=http.createServer((req,res)=>{
   await page.reload();await page.locator('[data-section=docker]').waitFor();await fits();
   assert.equal(await page.locator('[data-section=pve]').count(),0,'Docker-only host must not invent a PVE entry');
   if(actual){for(const item of actual.hosts){state.detail=item.host;state.hosts=[item];state.selected=item.host;await page.reload();await page.locator('.detail-grid').waitFor();await fits();for(const section of ['cpu','gpu','memory','network','disks','temperatures','history']){state.focus=section;await page.reload();await page.waitForFunction(()=>document.getElementById('main').innerHTML.length>0);await fits()}state.focus=null}}
-  assert.deepEqual(errors,[]);console.log(`PASS: ${viewport.width}×${viewport.height}, no scrolling or clipping, distance readings 64/48px, drill-down cores, 0/2/4 GPUs, three-host overview`);
+  for(const rotation of [0,90,180,270]){
+   state.rotation=rotation;
+   for(const section of [null,'cpu','gpu','memory','network','disks','temperatures','history','overview','pve-list','pve-detail','docker-list','docker-detail']){
+    state.detail=section==='overview'?null:pveHost.host;state.focus=['pve-list','pve-detail','docker-list','docker-detail','overview'].includes(section)?null:section;
+    pveHost.virtualization={...pveHost.docker,provider:'pve',guests:[guest]};
+    state.resource_provider=section?.startsWith('docker')?'docker':'pve';
+    state.pve_view=section?.endsWith('-list')?'guests':section?.endsWith('-detail')?'guest':null;
+    await page.reload();await page.waitForFunction(()=>document.getElementById('main').innerHTML.length>0);
+    const box=await page.locator('body').boundingBox();
+    assert.ok(Math.abs(box.x)<1&&Math.abs(box.y)<1&&Math.abs(box.width-viewport.width)<1&&Math.abs(box.height-viewport.height)<1,'Rotated page must fill the physical screen');
+    assert.equal(await page.evaluate(()=>document.body.dataset.rotation),String(rotation));
+    const overflow=await page.evaluate(()=>[...document.querySelectorAll('body,header,footer,main,article,.metric,.panel,.item-card,.pve-row,.pve-reading')].filter(e=>e.scrollHeight>e.clientHeight+2||e.scrollWidth>e.clientWidth+2).map(e=>({cls:e.className,h:e.clientHeight,sh:e.scrollHeight,w:e.clientWidth,sw:e.scrollWidth})));
+    assert.deepEqual(overflow,[],`${rotation}° ${section} overflow`);
+    if(rotation===90&&[null,'overview','history'].includes(section))await page.screenshot({path:`/tmp/hwmonitor-${viewport.width}-${section??'detail'}-90.png`});
+   }
+  }
+  state.rotation=90;
+  for(const stream of listeners)stream.write('data: '+JSON.stringify(state)+'\n\n');
+  await page.waitForFunction(()=>document.body.dataset.rotation==='90');
+  await page.setViewportSize({width:viewport.height,height:viewport.width});
+  await page.waitForFunction(()=>document.body.clientWidth===innerHeight&&document.body.clientHeight===innerWidth);
+  assert.deepEqual(errors,[]);console.log(`PASS: ${viewport.width}×${viewport.height}, four orientations, all views fit, distance readings, drill-down, 0/2/4 GPUs`);
  }finally{await browser.close();server.closeAllConnections();server.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

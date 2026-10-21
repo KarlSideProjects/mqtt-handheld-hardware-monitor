@@ -87,7 +87,7 @@ state.tick(drilldown_now + 10)
 assert state.detail is None and state.focus is None
 print('PASS: overview/device/metric navigation, click actions, metric switching, offline fallback')
 
-# Both analog sticks: center noise, dominant axis, all directions and held repeat.
+# Left stick navigates; right stick rotates once per excursion from center.
 from monitor import StickNavigation
 stick = StickNavigation({axis: (-1800, 1800) for axis in (0, 1, 3, 4)})
 stick.update(0, 20)
@@ -98,18 +98,38 @@ assert stick.poll(1.2) is None
 assert stick.poll(1.41) == 'right'
 stick.update(0, 0)
 assert stick.poll(1.5) is None
-for axis, value, expected in [(0,-1500,'left'),(1,-1500,'up'),(1,1500,'down'),(3,1500,'right'),(4,-1500,'up')]:
+for axis, value, expected in [(0,-1500,'left'),(1,-1500,'up'),(1,1500,'down'),(3,1500,'rotate_right'),(3,-1500,'rotate_left'),(4,-1500,None)]:
     stick.update(axis,value)
     assert stick.poll(2) == expected
     stick.update(axis,0)
     assert stick.poll(2.1) is None
 stick.update(0,1000);stick.update(1,-1500)
 assert stick.poll(3) == 'up'
+stick = StickNavigation({axis: (-1800, 1800) for axis in (0, 1, 3, 4)})
+stick.update(3, 1500)
+assert stick.poll(0) == 'rotate_right'
+assert stick.poll(1) is None
+stick.update(3, -1500)
+assert stick.poll(2) is None  # Crossing directly to the other side must not rotate again.
+stick.update(3, 100)
+assert stick.poll(3) is None
+stick.update(3, -1500)
+assert stick.poll(4) == 'rotate_left'
+state = Monitor()
+for angle in (90, 180, 270, 0):
+    state.action('rotate_right')
+    assert state.snapshot()['rotation'] == angle
+state.action('rotate_left')
+assert state.snapshot()['rotation'] == 270
+publish(state, 'rotation', time.monotonic())
+state.action('detail'); state.action('focus:cpu')
+state.action('rotate_right')
+assert state.snapshot()['rotation'] == 0 and state.focus == 'cpu'
 state = Monitor();publish(state,'navigation',time.monotonic());state.action('detail')
 for direction, panel in [('right','gpu'),('right','memory'),('down','disks'),('left','network'),('down','temperatures'),('right','history'),('up','disks'),('up','memory')]:
     state.action(direction)
     assert state.snapshot()['panel'] == panel
-print('PASS: both sticks, dead zone, dominant direction, repeat, spatial card navigation')
+print('PASS: stick navigation, latched quarter-turn rotation, four orientations, spatial card navigation')
 
 # Local device readings do not depend on any monitored MQTT host.
 from pathlib import Path
@@ -171,6 +191,7 @@ with TemporaryDirectory() as directory, patch('monitor.subprocess.run') as dpms:
     state.action('screen')
     assert state.snapshot()['screen_off'] and (panel/'brightness').read_text()=='0'
     version=state.version;state.action('down');assert state.version==version
+    state.action('rotate_right');assert state.rotation==0 and state.version==version
     state.action('screen')
     assert not state.snapshot()['screen_off'] and (panel/'brightness').read_text()=='16'
     assert [call.args[0][-1] for call in dpms.call_args_list]==['off','on']

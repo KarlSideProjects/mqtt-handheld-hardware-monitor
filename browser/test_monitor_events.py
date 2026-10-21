@@ -23,6 +23,13 @@ with ThreadingHTTPServer(('127.0.0.1', 0), handler(state)) as server:
     state.action('down')
     assert json.loads(response.readline().decode()[6:])['selected'] == 'two'
     assert time.monotonic() - started < .2, 'Input waited for polling heartbeat'
+    response.readline()
+    control = http.client.HTTPConnection(*server.server_address, timeout=2)
+    control.request('POST', '/control', json.dumps({'action': 'rotate_right'}),
+                    {'Host': '127.0.0.1:8766', 'Content-Type': 'application/json'})
+    assert control.getresponse().status == 200
+    assert json.loads(response.readline().decode()[6:])['rotation'] == 90
+    control.close()
     conn.close()
     conn = http.client.HTTPConnection(*server.server_address, timeout=2)
     conn.request('GET', '/pve.js')

@@ -1,0 +1,33 @@
+flowchart TD
+A["Parse repo and fetch CLI arguments"]
+B{"Fetch requested"}
+C["Fetch origin and refresh remote default HEAD"]
+D["Read HEAD branch and default ref"]
+E{"Default ref exists"}
+F["Compute ahead and behind counts"]
+G["Keep divergence null"]
+H["Read porcelain status; return facts with fetched or local_cache provenance"]
+I["Print success JSON and exit zero"]
+J["Required Git command failure raises CheckoutError"]
+K["CLI catches checkout OS value and timeout errors; prints error JSON and exits one"]
+A --> B
+B -->|yes| C
+B -->|no| D
+C -->|success| D
+C -->|failure| J
+D --> E
+D -->|required command failure| J
+E -->|yes| F
+E -->|no| G
+F --> H
+G --> H
+H --> I
+H -->|required command failure| J
+H -->|OS or timeout exception| K
+F -->|required command failure| J
+J --> K
+C -->|OS or timeout exception| K
+D -->|OS or timeout exception| K
+F -->|invalid integer or timeout| K
+A -->|invalid arguments| L
+L["Argparse prints usage and exits before JSON handling"]

@@ -1,0 +1,22 @@
+{
+  "feature": "checkout.inspect",
+  "fingerprint": "b71076a6dd5363a0bb7656b9e688075006b03e83e87b21e8790472a034b95d6d",
+  "reviewer": "/root/checkout_final_review",
+  "verdict": "pass",
+  "findings": [],
+  "evidence": [
+    "Independently read candidate checkout source, tests, flow, manifest, workflow policy, adoption evidence, CI workflow, checker, parser adapter, requirements and pre-commit asset.",
+    "Compared scripts/checkout.py and browser/test_checkout.py against base 53aea8bc420aa8d73d585dae273ff69ad191dea5; both are unchanged.",
+    "Verified flow ordering, optional symbolic-ref failures, divergence-null branch, required Git failures, CLI error boundary, argparse exit and fetch side effects against source.",
+    "Verified all flow nodes map to the appropriate source symbols; nested Git helper behavior is included in inspect_checkout's AST hash.",
+    "Independently recomputed the supplied feature fingerprint successfully.",
+    "Reviewed checker policy binding, comparison-base handling, staged reads, review evidence matching and bounded adoption scope.",
+    "Confirmed release.py consumes inspect_checkout and its exclusion is explicitly documented."
+  ],
+  "limitations": [
+    "Read-only semantic review; did not execute the target application, tests, devices, sender or full suite.",
+    "Graph coverage metadata and runtime test results were supplied by the parent; full relevant source files were independently read.",
+    "No diagram rendering, GitHub runner execution or remote merge-protection enforcement was verified.",
+    "Review attests the bounded checkout.inspect adoption, not unrelated worktree changes or complete repository coverage."
+  ]
+}

@@ -1,0 +1,26 @@
+Isolated temporary Git repositories; synthetic fixture reviews exercise structure only.
+Runner SHA256: ebee0debb95654d79ef68528f2ec85e513e4f68331e256babf39d1bdffd87cf5
+unchanged baseline: PASS; check passed (worktree); affected features:
+stale raw MD5 rejected: PASS; flow checker: stale md5: source.py; run snapshot
+cosmetic refresh needs no review: PASS; check passed (worktree); affected features:
+rehash-only semantic edit rejected: PASS; flow checker: missing current review: a; fingerprint f1d69e8dc09c4773097183c7f91d407245a4684fc14edca6be21a2b668243b63
+isolated function keeps b review reusable: PASS; check passed (worktree); affected features: a
+incomplete review rejected: PASS; flow checker: invalid review evidence: a
+failed review rejected: PASS; flow checker: invalid review evidence: a
+stale review rejected: PASS; flow checker: invalid review evidence: a
+dependent a also needs review: PASS; flow checker: missing current review: a; fingerprint 3ef52150a107533e21317e9b3f4550ddc3b571a0e66aa648e922985ccef98677
+shared dependency plus consumer reviewed: PASS; check passed (worktree); affected features: a, shared
+module context also invalidates b: PASS; flow checker: missing current review: b; fingerprint b76899c08c9a4e1cf9ba9261d7adae4dc6b11d8f6569c8599bfd404d8afd5448
+module context all features reviewed: PASS; check passed (worktree); affected features: a, b, shared
+unregistered file rejected: PASS; flow checker: unregistered source inputs: new.py
+unmapped symbol rejected: PASS; flow checker: unmapped AST symbols: source.py: new
+nonexistent symbol rejected: PASS; flow checker: missing AST symbol: source.py:missing
+nonexistent path rejected: PASS; flow checker: missing input: missing.py
+removed feature mapping rejected: PASS; flow checker: unmapped AST symbols: source.py: b
+unknown graph node rejected: PASS; flow checker: undefined edge node: docs/flows/a.mmd
+invalid node budget rejected: PASS; flow checker: supported node budget is 1..1000
+unsafe path rejected: PASS; flow checker: unsafe path: ../outside.mmd
+unsupported syntax rejected: PASS; flow checker: unsupported diagram header: docs/flows/a.mmd
+self-loop terminates: PASS; check passed (worktree); affected features: a
+unstaged repair cannot fix index: PASS; flow checker: stale md5: source.py; run snapshot
+missing base rejected: PASS

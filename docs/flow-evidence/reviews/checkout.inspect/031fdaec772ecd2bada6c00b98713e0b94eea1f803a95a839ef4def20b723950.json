@@ -1,0 +1,22 @@
+{
+  "feature": "checkout.inspect",
+  "fingerprint": "031fdaec772ecd2bada6c00b98713e0b94eea1f803a95a839ef4def20b723950",
+  "reviewer": "/root/adopt_semantic_review",
+  "verdict": "pass",
+  "findings": [],
+  "evidence": [
+    "Read AGENTS.md, docs/flows/README.md, docs/flow-manifest.json, docs/flows/checkout.inspect.mmd and authoritative docs/agents/workflow.md.",
+    "Compared raw base 53aea8bc420aa8d73d585dae273ff69ad191dea5 and candidate sources: scripts/checkout.py, browser/test_checkout.py, scripts/release.py and workflow contract are unchanged.",
+    "Flow and source agree on optional fetch/default-HEAD refresh, required Git failures, nullable optional symbolic refs, conditional divergence, porcelain status, provenance, success JSON, handled exceptions and argparse errors before JSON handling. README explicitly records rename segment-count limitations.",
+    "Manifest maps every flow node to main or inspect_checkout; the nested Git helper is included within inspect_checkout's AST. Standard-library, Git and remote dependencies are documented. release.py consumes returned head/dirty fields; its wider behavior is explicitly outside adoption scope.",
+    "Read checker, parser, dependency pins, hook and dedicated CI workflow. Policy fingerprints bind relevant inputs; base without manifest requires initial review. Staged hook checks index bytes. Existing CI retains scripts/check.py --layout, which includes checkout and release tests.",
+    "Read retained runtime git-fixtures.md, tests.log and fetch.json: four fixture tests passed and recorded real fetch reported fetched provenance without changing checkout HEAD.",
+    "Tier 2 graph search/trace/snippet and coverage checks corroborated six callers. Direct source confirms the graph's Tree.git callee is a false resolution of the nested helper; it is not an application dependency."
+  ],
+  "limitations": [
+    "Read-only review: did not execute application code, rerun tests, render Mermaid, install hooks, or verify remote required-check settings.",
+    "Retained runtime evidence lacks dedicated argparse, CLI error JSON and timeout tests; those paths were reviewed statically.",
+    "Review covers checkout.inspect and relevant adoption policy only. Other product behavior, deployment, hardware and sender validation remain outside scope.",
+    "Graph coverage is best effort; requirements and test-log freshness were untracked, so their bytes were read directly. Semantic approval does not authenticate reviewer records or establish protected merge enforcement."
+  ]
+}

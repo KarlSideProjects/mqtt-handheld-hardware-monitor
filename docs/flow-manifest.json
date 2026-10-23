@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "scope": {
+    "include": [
+      "scripts/checkout.py"
+    ],
+    "exclude": {}
+  },
+  "sources": [
+    {
+      "path": "scripts/checkout.py",
+      "kind": "python",
+      "md5": "f67164580c8033ae68b75207ca57bf46",
+      "context_hash": "30777915a1ff24025d0a496bf9cfa3f508b8971e894ddd8c878472f96c650d89",
+      "symbols": {
+        "inspect_checkout": "db88818e1e8928f1885b4f3e2f30e20ca62a49a9437d3bd8343971195490d14b",
+        "main": "a459415d641a81c9580f25ce1fa31ef5ade6f38fe631137099b1634e46cb4810"
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "checkout.inspect",
+      "flow": "docs/flows/checkout.inspect.mmd",
+      "mappings": [
+        {
+          "node": "A",
+          "path": "scripts/checkout.py",
+          "symbol": "main"
+        },
+        {
+          "node": "B",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "C",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "D",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "E",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "F",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "G",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "H",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "I",
+          "path": "scripts/checkout.py",
+          "symbol": "main"
+        },
+        {
+          "node": "J",
+          "path": "scripts/checkout.py",
+          "symbol": "inspect_checkout"
+        },
+        {
+          "node": "K",
+          "path": "scripts/checkout.py",
+          "symbol": "main"
+        },
+        {
+          "node": "L",
+          "path": "scripts/checkout.py",
+          "symbol": "main"
+        }
+      ],
+      "depends_on": []
+    }
+  ],
+  "reviews": [
+    {
+      "feature": "checkout.inspect",
+      "fingerprint": "031fdaec772ecd2bada6c00b98713e0b94eea1f803a95a839ef4def20b723950",
+      "reviewer": "/root/adopt_semantic_review",
+      "verdict": "pass",
+      "evidence": "docs/flow-evidence/reviews/checkout.inspect/031fdaec772ecd2bada6c00b98713e0b94eea1f803a95a839ef4def20b723950.json"
+    }
+  ],
+  "policy_inputs": [
+    "AGENTS.md",
+    "docs/agents/workflow.md",
+    "docs/flows/README.md",
+    "browser/test_checkout.py",
+    ".github/workflows/flow-docs.yml",
+    "tools/flow-docs/flow_checker.py",
+    "tools/flow-docs/flow_parsers.py",
+    "tools/flow-docs/requirements-ast.txt",
+    "tools/flow-docs/assets/pre-commit"
+  ],
+  "limits": {
+    "nodes": 25,
+    "branch_depth": 8
+  }
+}

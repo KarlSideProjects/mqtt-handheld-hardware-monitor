@@ -27,6 +27,7 @@
 - [選單與按鍵圖解](docs/device-controls.md)：關屏、喚醒及退出。
 - [使用指南](docs/user-guide.md)：實機畫面、詳細功能、維護與還原。
 - [完整安裝說明](docs/installation.md)：SSH、MQTT、相依套件與驗證限制。
+- [流程文件與覆蓋範圍](docs/flows/README.md)：修改前閱讀與同步檢查。
 - [CI 手冊](docs/ci-validation.md)：開發驗證。
 
 程式碼採 [GPL v3](LICENSE)。

@@ -1,0 +1,9 @@
+test_dirty_and_detached_are_reported_without_changing_files (test_checkout.CheckoutTests.test_dirty_and_detached_are_reported_without_changing_files) ... ok
+test_fetch_refreshes_a_changed_remote_default_branch (test_checkout.CheckoutTests.test_fetch_refreshes_a_changed_remote_default_branch) ... ok
+test_fetch_reports_actual_default_branch_and_stale_checkout (test_checkout.CheckoutTests.test_fetch_reports_actual_default_branch_and_stale_checkout) ... ok
+test_unknown_default_and_failed_fetch_do_not_invent_current_status (test_checkout.CheckoutTests.test_unknown_default_and_failed_fetch_do_not_invent_current_status) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.257s
+
+OK
